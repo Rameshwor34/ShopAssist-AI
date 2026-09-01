@@ -1,4104 +1,3027 @@
-\# 🛍️ ShopAssist AI
+# ShopAssist AI
+
+> AI-powered customer-support assistant combining LLMs, hybrid intent routing, specialized agents, RAG, tool calling, caching, deterministic fallbacks, FastAPI, Streamlit, and Docker.
+
+**Architecture diagram:** `docs/architecture.png`
+
+---
+
+## Table of Contents
+
+1. [Project Overview](#project-overview)
+2. [Problem Statement](#problem-statement)
+3. [Objectives](#objectives)
+4. [Key Features](#key-features)
+5. [System Architecture](#system-architecture)
+6. [Architecture Components](#architecture-components)
+7. [Task 1 - Build an AI Assistant](#task-1---build-an-ai-assistant)
+8. [LLM Integration](#llm-integration)
+9. [Prompt Engineering](#prompt-engineering)
+10. [Structured Output](#structured-output)
+11. [Intent Routing](#intent-routing)
+12. [Specialized Agents](#specialized-agents)
+13. [Tool Calling](#tool-calling)
+14. [RAG Pipeline](#rag-pipeline)
+15. [Document Ingestion and Chunking](#document-ingestion-and-chunking)
+16. [Embeddings and Retrieval](#embeddings-and-retrieval)
+17. [Local LLM Deployment](#local-llm-deployment)
+18. [Task 2 - Productionization](#task-2---productionization)
+19. [Web UI](#web-ui)
+20. [Backend API](#backend-api)
+21. [Caching](#caching)
+22. [Reliability](#reliability)
+23. [Fallback Strategy](#fallback-strategy)
+24. [Rate-Limit Handling](#rate-limit-handling)
+25. [Error Handling](#error-handling)
+26. [Performance Engineering](#performance-engineering)
+27. [Dockerization](#dockerization)
+28. [Docker Compose](#docker-compose)
+29. [Configuration](#configuration)
+30. [Project Structure](#project-structure)
+31. [Installation](#installation)
+32. [Running the Application](#running-the-application)
+33. [Backend Health Check](#backend-health-check)
+34. [API Usage](#api-usage)
+35. [Example Requests](#example-requests)
+36. [Testing](#testing)
+37. [Assignment Requirement Mapping](#assignment-requirement-mapping)
+38. [Deliverables](#deliverables)
+39. [ONNX Consideration](#onnx-consideration)
+40. [Cloud Deployment](#cloud-deployment)
+41. [Security Considerations](#security-considerations)
+42. [Future Improvements](#future-improvements)
+43. [Conclusion](#conclusion)
+44. [Created By](#created-by)
+
+---
+
+# Project Overview
+
+ShopAssist AI is an AI-powered customer-support assistant designed for an e-commerce environment.
+
+The system automatically determines the customer's intent, routes the request to an appropriate specialized support agent, retrieves relevant knowledge, invokes transactional tools when required, and generates a concise customer-facing response.
+
+The application is designed around production-oriented AI engineering principles.
+
+The implementation combines:
+
+* Large Language Model integration
+* Gemini API
+* Prompt engineering
+* Structured JSON output
+* Hybrid intent routing
+* Specialized support agents
+* Tool calling
+* Mock transactional data
+* Retrieval-Augmented Generation
+* Embeddings
+* Semantic retrieval
+* Prompt/response caching
+* Deterministic fallbacks
+* Rate-limit handling
+* Error handling
+* FastAPI
+* Streamlit
+* Docker
+* Docker Compose
+* Optional local LLM deployment through vLLM
+
+---
+
+# Problem Statement
+
+Modern e-commerce platforms receive large numbers of customer-support requests.
+
+Typical requests include:
+
+* Order status
+* Shipping information
+* Returns
+* Refunds
+* Order cancellations
+* Payment problems
+* Account issues
+* Product information
+* General support
 
+A conventional rule-based chatbot can handle simple requests but becomes difficult to maintain as the number of intents and business rules increases.
 
+ShopAssist AI addresses this problem using an AI-driven routing and orchestration architecture.
 
-\*\*AI-Powered E-Commerce Customer Support Assistant\*\*
+The system combines LLM-based classification with deterministic fallback logic so that support functionality remains available even when the primary LLM provider is unavailable or rate-limited.
 
+---
 
+# Objectives
 
-ShopAssist AI is a production-oriented customer support assistant designed for e-commerce applications. It combines \*\*LLM-based intent routing, specialized agents, tool calling, Retrieval-Augmented Generation (RAG), structured JSON responses, caching, deterministic fallbacks, and containerized deployment\*\* into a single application.
+The project has two main objectives.
 
+## Task 1
 
+Build an AI assistant using modern LLM and RAG techniques.
 
-The system is designed to answer common e-commerce customer-support questions such as:
+The implementation covers:
 
+* LLM integration
+* Prompt engineering
+* Structured output
+* Intent classification
+* Tool calling
+* RAG
+* Embeddings
+* Retrieval
+* Local LLM serving architecture
+* Containerization
 
+## Task 2
 
-\* Where is my order?
+Productionize the AI assistant.
 
-\* What is the status of my order?
+The implementation covers:
 
-\* What is the estimated delivery date?
+* Web UI
+* Backend API
+* Docker deployment
+* Docker Compose
+* Caching
+* Error handling
+* Rate-limit handling
+* Fallback mechanisms
+* Graceful degradation
+* Performance considerations
+* Deployment instructions
 
-\* Can I return my order?
+---
 
-\* Is my order eligible for return?
+# Key Features
 
-\* What is the return policy?
+## Intelligent Intent Routing
 
-\* Where is my refund?
-
-\* Can I cancel my order?
-
-\* Why did my payment fail?
-
-\* Is a product compatible with my device?
-
-\* Is a product currently available?
-
-
-
-The application provides a \*\*Streamlit web interface\*\* backed by a \*\*FastAPI service\*\*, with Gemini used as the primary LLM provider and a deterministic fallback mechanism for graceful degradation.
-
-
-
-\---
-
-
-
-\# 📋 Table of Contents
-
-
-
-1\. \[Project Overview](#-project-overview)
-
-2\. \[Problem Statement](#-problem-statement)
-
-3\. \[Objectives](#-objectives)
-
-4\. \[Key Features](#-key-features)
-
-5\. \[System Architecture](#-system-architecture)
-
-6\. \[Architecture Components](#-architecture-components)
-
-7\. \[Application Request Flow](#-application-request-flow)
-
-8\. \[Task 1 — Build an AI Assistant](#-task-1--build-an-ai-assistant)
-
-9\. \[Task 2 — Productionize the AI Assistant](#-task-2--productionize-the-ai-assistant)
-
-10\. \[LLM Integration](#-llm-integration)
-
-11\. \[Prompt Engineering](#-prompt-engineering)
-
-12\. \[Structured Output](#-structured-output)
-
-13\. \[Intent Routing](#-intent-routing)
-
-14\. \[Specialized Agents](#-specialized-agents)
-
-15\. \[Tool Calling](#-tool-calling)
-
-16\. \[RAG Pipeline](#-rag-pipeline)
-
-17\. \[Local LLM Deployment](#-local-llm-deployment)
-
-18\. \[Caching](#-caching)
-
-19\. \[Reliability and Graceful Degradation](#-reliability-and-graceful-degradation)
-
-20\. \[Mock Transactional Data](#-mock-transactional-data)
-
-21\. \[Web Interface](#-web-interface)
-
-22\. \[Docker Containerization](#-docker-containerization)
-
-23\. \[Docker Compose](#-docker-compose)
-
-24\. \[Configuration](#-configuration)
-
-25\. \[Project Structure](#-project-structure)
-
-26\. \[Running the Application](#-running-the-application)
-
-27\. \[Testing the Backend](#-testing-the-backend)
-
-28\. \[Example Requests](#-example-requests)
-
-29\. \[Production Engineering Considerations](#-production-engineering-considerations)
-
-30\. \[Assignment Requirements Coverage](#-assignment-requirements-coverage)
-
-31\. \[Limitations and Future Improvements](#-limitations-and-future-improvements)
-
-32\. \[Conclusion](#-conclusion)
-
-33\. \[Created By](#-created-by)
-
-
-
-\---
-
-
-
-\# 📌 Project Overview
-
-
-
-ShopAssist AI implements an AI-powered customer-support architecture for an e-commerce environment.
-
-
-
-Instead of sending every customer message directly to an LLM, the application first determines the customer's intent and then routes the request through the appropriate processing path.
-
-
-
-The overall processing pipeline is:
-
-
+The system classifies customer messages into:
 
 ```text
-
-Customer
-
-&#x20;  │
-
-&#x20;  ▼
-
-Streamlit Web UI
-
-&#x20;  │
-
-&#x20;  ▼
-
-FastAPI Backend
-
-&#x20;  │
-
-&#x20;  ▼
-
-Chat Service
-
-&#x20;  │
-
-&#x20;  ▼
-
-Intent Router
-
-&#x20;  │
-
-&#x20;  ├── Order Support
-
-&#x20;  ├── Shipping
-
-&#x20;  ├── Returns
-
-&#x20;  ├── Refunds
-
-&#x20;  ├── Cancellations
-
-&#x20;  ├── Payments
-
-&#x20;  ├── Account Support
-
-&#x20;  ├── Product Information
-
-&#x20;  └── General Support
-
-&#x20;  │
-
-&#x20;  ▼
-
-Specialized Agent
-
-&#x20;  │
-
-&#x20;  ├── Tool Calling
-
-&#x20;  │
-
-&#x20;  ├── RAG Retrieval
-
-&#x20;  │
-
-&#x20;  └── LLM Generation
-
-&#x20;  │
-
-&#x20;  ▼
-
-Structured Response
-
-&#x20;  │
-
-&#x20;  ▼
-
-Streamlit UI
-
-```
-
-
-
-The architecture supports both cloud-based LLM inference through \*\*Gemini\*\* and optional local inference through \*\*vLLM\*\*.
-
-
-
-\---
-
-
-
-\# 🧩 Problem Statement
-
-
-
-\## Task 1 — Build an AI Assistant
-
-
-
-The first task requires development of a robust AI assistant using modern LLM APIs and RAG architectures.
-
-
-
-The assistant must demonstrate:
-
-
-
-\* Integration with a major LLM provider
-
-\* Prompt engineering
-
-\* Structured output
-
-\* Tool calling
-
-\* RAG
-
-\* Embeddings and vector retrieval
-
-\* Local open-source model deployment
-
-\* Docker containerization
-
-
-
-\## Task 2 — Productionize the AI Assistant
-
-
-
-The second task focuses on transforming the assistant into a more production-oriented AI system.
-
-
-
-The productionization requirements include:
-
-
-
-\* A web UI
-
-\* Backend/API integration
-
-\* Reliability mechanisms
-
-\* Fallback behavior
-
-\* Error handling
-
-\* Caching
-
-\* Containerization
-
-\* Docker Compose
-
-\* Deployment instructions
-
-\* Production-oriented architecture
-
-
-
-ShopAssist AI addresses these requirements through a modular backend architecture and a Dockerized application stack.
-
-
-
-\---
-
-
-
-\# 🎯 Objectives
-
-
-
-The main objectives of this project are:
-
-
-
-1\. Build an AI-powered e-commerce support assistant.
-
-2\. Integrate a modern LLM provider.
-
-3\. Implement prompt engineering.
-
-4\. Implement structured JSON responses.
-
-5\. Build an intent classification and routing layer.
-
-6\. Route requests to specialized support agents.
-
-7\. Integrate transactional tools.
-
-8\. Implement RAG-based knowledge retrieval.
-
-9\. Support local LLM inference through vLLM.
-
-10\. Provide graceful degradation when the primary LLM is unavailable.
-
-11\. Add response caching.
-
-12\. Provide a browser-based Streamlit interface.
-
-13\. Containerize the application.
-
-14\. Provide a reproducible Docker Compose deployment.
-
-15\. Design the system around production-oriented AI engineering principles.
-
-
-
-\---
-
-
-
-\# ✨ Key Features
-
-
-
-\## 🤖 LLM Integration
-
-
-
-Gemini is used as the primary cloud LLM provider.
-
-
-
-The application supports configuration of:
-
-
-
-\* LLM provider
-
-\* Gemini model
-
-\* Temperature
-
-\* Top-p
-
-
-
-The current configuration uses:
-
-
-
-```text
-
-LLM\_PROVIDER=gemini
-
-GEMINI\_MODEL=gemini-3.6-flash
-
-```
-
-
-
-\---
-
-
-
-\## 🧠 Intelligent Intent Routing
-
-
-
-Customer messages are classified into one of nine supported intents:
-
-
-
-```text
-
-order\_support
-
+order_support
 shipping
-
 returns
-
 refunds
-
 cancellations
-
 payments
-
-account\_support
-
-product\_information
-
-general\_support
-
+account_support
+product_information
+general_support
 ```
 
+---
 
+## Hybrid Routing
 
-The router first attempts LLM-based classification.
+Gemini is used as the primary intent classifier.
 
+If Gemini is unavailable, rate-limited, or produces invalid output, the system automatically uses deterministic keyword-based routing.
 
+This provides a reliable fallback path.
 
-If Gemini is unavailable, rate-limited, or produces malformed output, the system switches to deterministic keyword-based routing.
+---
 
+## Specialized Agents
 
+Each detected intent is associated with specialized instructions.
 
-\---
+This allows different support categories to follow different response requirements.
 
+---
 
+## Tool Calling
 
-\## 👨‍💼 Specialized Agents
+Transactional requests can invoke tools against mock e-commerce data.
 
-
-
-After identifying the intent, ShopAssist selects the appropriate specialized agent instructions.
-
-
-
-This allows the same underlying LLM to behave differently depending on the customer's request.
-
-
-
-For example:
-
-
+Implemented tools include:
 
 ```text
-
-Customer Request
-
-&#x20;     │
-
-&#x20;     ▼
-
-Intent Router
-
-&#x20;     │
-
-&#x20;     ├── returns
-
-&#x20;     │       ▼
-
-&#x20;     │   Returns Agent
-
-&#x20;     │
-
-&#x20;     ├── shipping
-
-&#x20;     │       ▼
-
-&#x20;     │   Shipping Agent
-
-&#x20;     │
-
-&#x20;     ├── order\_support
-
-&#x20;     │       ▼
-
-&#x20;     │   Order Support Agent
-
-&#x20;     │
-
-&#x20;     └── product\_information
-
-&#x20;             ▼
-
-&#x20;         Product Agent
-
+get_order_status
+get_product_info
+check_return_eligibility
 ```
 
+---
 
+## RAG
 
-\---
+Relevant knowledge-base information is retrieved before response generation.
 
+The retrieved context is provided to the model so that responses can be grounded in available documentation.
 
+---
 
-\# 🏗️ System Architecture
+## Structured Responses
 
-
-
-\## Architecture Diagram
-
-
-
-┌──────────────────────────────────────────────────────────────────────────────────────────────┐
-│                         🏗️ ShopAssist AI — System Architecture                               │
-│                                                                                              │
-│                                      👤 USER                                                 │
-│                                        │                                                     │
-│                                        ▼                                                     │
-│                              ┌───────────────────┐                                           │
-│                              │  🖥️ Streamlit UI  │                                           │
-│                              │   frontend/app.py │                                           │
-│                              │                   │                                           │
-│                              │  • Chat interface │                                           │
-│                              │  • User messages  │                                           │
-│                              │  • AI responses   │                                           │
-│                              └─────────┬─────────┘                                           │
-│                                        │ HTTP POST /chat                                     │
-│                                        ▼                                                     │
-│                         ┌──────────────────────────────┐                                     │
-│                         │       ⚡ FastAPI Backend      │                                     │
-│                         │          backend/main.py      │                                     │
-│                         │                              │                                     │
-│                         │  • API endpoints             │                                     │
-│                         │  • Request validation        │                                     │
-│                         │  • Response handling         │                                     │
-│                         └──────────────┬───────────────┘                                     │
-│                                        │                                                     │
-│                                        ▼                                                     │
-│                         ┌──────────────────────────────┐                                     │
-│                         │       🧭 Intent Router        │                                     │
-│                         │     backend/routing/router.py│                                     │
-│                         │                              │                                     │
-│                         │      Hybrid Routing          │                                     │
-│                         │                              │                                     │
-│                         │   ┌──────────────────────┐   │                                     │
-│                         │   │ Gemini Classification│   │                                     │
-│                         │   └──────────┬───────────┘   │                                     │
-│                         │              │               │                                     │
-│                         │              ▼               │                                     │
-│                         │   ┌──────────────────────┐   │                                     │
-│                         │   │ Deterministic        │   │                                     │
-│                         │   │ Keyword Fallback    │   │                                     │
-│                         │   └──────────────────────┘   │                                     │
-│                         └──────────────┬───────────────┘                                     │
-│                                        │                                                     │
-│              ┌─────────────────────────┼─────────────────────────┐                           │
-│              │                         │                         │                           │
-│              ▼                         ▼                         ▼                           │
-│     ┌─────────────────┐      ┌──────────────────┐      ┌──────────────────┐                 │
-│     │ 🎯 Specialized  │      │ 🔧 Tool Registry  │      │ 📚 RAG Pipeline  │                 │
-│     │     Agents      │      │                  │      │                  │                 │
-│     │                 │      │ • Order Status   │      │ • Ingestion      │                 │
-│     │ • Order Agent   │      │ • Product Info   │      │ • Chunking       │                 │
-│     │ • Shipping      │      │ • Return Check   │      │ • Embeddings     │                 │
-│     │ • Returns       │      │                  │      │ • Vector Search  │                 │
-│     │ • Refunds       │      │                  │      │ • Retrieval      │                 │
-│     │ • Cancellation  │      └────────┬─────────┘      └────────┬─────────┘                 │
-│     │ • Payments      │               │                         │                           │
-│     │ • Account       │               ▼                         ▼                           │
-│     │ • Product Info  │      ┌─────────────────┐       ┌──────────────────┐                 │
-│     │ • General       │      │ 🗄️ Mock         │       │ 📖 Knowledge Base │                 │
-│     │   Support       │      │ Transactional   │       │                  │                 │
-│     └────────┬────────┘      │ Data           │       │ Policies / FAQs  │                 │
-│              │               │                │       │ Product / Support│                 │
-│              │               │ orders.json    │       │ Documents        │                 │
-│              │               │ products.json  │       └────────┬─────────┘                 │
-│              │               └─────────────────┘                │                           │
-│              │                                                  │                           │
-│              └──────────────────────────┬───────────────────────┘                           │
-│                                         │                                                   │
-│                                         ▼                                                   │
-│                              ┌──────────────────────┐                                        │
-│                              │   🧠 Prompt Builder   │                                        │
-│                              │                      │                                        │
-│                              │ • System prompt      │                                        │
-│                              │ • Agent instructions │                                        │
-│                              │ • User message       │                                        │
-│                              │ • Retrieved context  │                                        │
-│                              │ • Tool results       │                                        │
-│                              │ • temperature        │                                        │
-│                              │ • top_p              │                                        │
-│                              └──────────┬───────────┘                                        │
-│                                         │                                                   │
-│                          ┌──────────────┴──────────────┐                                    │
-│                          │                             │                                    │
-│                          ▼                             ▼                                    │
-│                ┌────────────────────┐       ┌────────────────────────┐                     │
-│                │ ☁️ Gemini Provider │       │ 🖥️ Optional Local LLM │                     │
-│                │                    │       │        via vLLM        │                     │
-│                │ • Gemini API       │       │                        │                     │
-│                │ • Primary LLM      │       │ • Open-source model    │                     │
-│                │ • JSON generation  │       │ • Qwen 0.6B            │                     │
-│                └─────────┬──────────┘       │ • OpenAI-compatible API│                     │
-│                          │                  └────────────┬───────────┘                     │
-│                          │                               │                                 │
-│                          └───────────────┬───────────────┘                                 │
-│                                          │                                                 │
-│                                          ▼                                                 │
-│                               ┌─────────────────────┐                                      │
-│                               │   🛡️ Reliability    │                                      │
-│                               │                     │                                      │
-│                               │ • Error handling    │                                      │
-│                               │ • Rate-limit aware  │                                      │
-│                               │ • Provider fallback │                                      │
-│                               │ • Deterministic     │                                      │
-│                               │   fallback          │                                      │
-│                               │ • Graceful degrade  │                                      │
-│                               │ • Response caching  │                                      │
-│                               └──────────┬──────────┘                                      │
-│                                          │                                                 │
-│                                          ▼                                                 │
-│                               ┌─────────────────────┐                                      │
-│                               │ 📦 Structured JSON   │                                      │
-│                               │                     │                                      │
-│                               │ • intent             │                                      │
-│                               │ • answer             │                                      │
-│                               │ • confidence         │                                      │
-│                               │ • sources            │                                      │
-│                               │ • tool_used          │                                      │
-│                               │ • routing_method     │                                      │
-│                               │ • generation_method  │                                      │
-│                               │ • cached             │                                      │
-│                               └──────────┬──────────┘                                      │
-│                                          │                                                 │
-│                                          ▼                                                 │
-│                                  🖥️ STREAMLIT UI                                           │
-│                                          │                                                 │
-│                                          ▼                                                 │
-│                                   👤 USER RESPONSE                                         │
-│                                                                                              │
-│ ─────────────────────────────────────────────────────────────────────────────────────────── │
-│                                                                                              │
-│ This version reflects the **actual ShopAssist implementation and the assignment            │
-│ requirements**, including the FastAPI backend, Streamlit UI, hybrid routing, specialized   │
-│ agents, tools, mock transactional data, RAG, Gemini, structured JSON, caching,             │
-│ deterministic fallbacks, reliability handling, Docker Compose, and optional vLLM local     │
-│ deployment.                                                                                 │
-└─────────────────────────────────────────────────────────────────────────────────────────────
-
-
-Recommended location:
-
-
-
-```text
-
-docs/
-
-└── architecture.png
-
-```
-
-
-
-The final diagram should represent the complete implementation, including:
-
-
-
-\* Customer
-
-\* Streamlit frontend
-
-\* FastAPI backend
-
-\* ChatService
-
-\* IntentRouter
-
-\* Gemini provider
-
-\* deterministic fallback router
-
-\* specialized agents
-
-\* tool registry
-
-\* mock transactional data
-
-\* RAG retrieval
-
-\* knowledge base
-
-\* embeddings/vector retrieval
-
-\* response generation
-
-\* caching
-
-\* structured JSON response
-
-\* optional vLLM deployment
-
-\* Docker containers
-
-\* backend/frontend ports
-
-\* error handling and graceful degradation
-
-
-
-The diagram should represent the actual implementation rather than unrelated infrastructure.
-
-
-
-\---
-
-
-
-\# 🔧 Architecture Components
-
-
-
-\## 1. Streamlit Frontend
-
-
-
-The frontend provides the user-facing chat interface.
-
-
-
-It is responsible for:
-
-
-
-\* Accepting customer messages
-
-\* Sending requests to the backend
-
-\* Displaying assistant responses
-
-\* Presenting the ShopAssist AI interface
-
-
-
-The frontend runs on:
-
-
-
-```text
-
-http://localhost:8501
-
-```
-
-
-
-\---
-
-
-
-\## 2. FastAPI Backend
-
-
-
-The backend provides the API layer for ShopAssist AI.
-
-
-
-The FastAPI application exposes endpoints including:
-
-
-
-```text
-
-GET /health
-
-POST /chat
-
-```
-
-
-
-The backend runs inside Docker on port `8000`.
-
-
-
-The host maps this to:
-
-
-
-```text
-
-localhost:8002
-
-```
-
-
-
-Therefore:
-
-
-
-```text
-
-Host:      8002
-
-Container: 8000
-
-```
-
-
-
-Health check:
-
-
-
-```text
-
-http://localhost:8002/health
-
-```
-
-
-
-Example response:
-
-
+The backend returns structured JSON containing fields such as:
 
 ```json
-
 {
-
-&#x20; "status": "healthy",
-
-&#x20; "service": "shopassist-ai"
-
+  "intent": "order_support",
+  "answer": "Your order ORD-1002 is currently processing.",
+  "confidence": 0.95,
+  "sources": [],
+  "tool_used": "get_order_status",
+  "routing_method": "deterministic_fallback",
+  "generation_method": "deterministic_fallback"
 }
-
 ```
 
+---
 
+## Caching
 
-\---
+Repeated requests can use cached responses to reduce unnecessary model calls and improve response latency.
 
+---
 
+## Graceful Degradation
 
-\# 🔄 Application Request Flow
+When Gemini reaches its API quota, the application does not crash.
 
+Instead:
 
+```text
+Gemini unavailable
+       |
+       v
+Deterministic routing
+       |
+       v
+Deterministic response
+       |
+       v
+Successful API response
+```
+
+---
+
+# System Architecture
+
+The complete architecture diagram is available at:
+
+```text
+docs/architecture.png
+```
+
+The diagram represents the implemented ShopAssist AI architecture, including:
+
+* Streamlit frontend
+* FastAPI backend
+* Chat service
+* Hybrid intent router
+* Specialized agents
+* Gemini provider
+* RAG retrieval
+* Embeddings
+* Knowledge base
+* Transactional tools
+* Mock order/product data
+* Caching
+* Deterministic fallback
+* Docker Compose
+* Optional local vLLM deployment
+
+---
+
+# High-Level Architecture
+
+```text
+                         SHOPASSIST AI
+                              |
+                              v
+                    +-------------------+
+                    |   Streamlit UI    |
+                    +---------+---------+
+                              |
+                              | HTTP POST /chat
+                              v
+                    +-------------------+
+                    |    FastAPI API    |
+                    +---------+---------+
+                              |
+                              v
+                    +-------------------+
+                    |    ChatService    |
+                    +---------+---------+
+                              |
+             +----------------+----------------+
+             |                |                |
+             v                v                v
+       Intent Router        RAG             Tools
+             |                |                |
+             v                v                v
+     Specialized Agent   Knowledge Base   Mock Data
+             |                |                |
+             +----------------+----------------+
+                              |
+                              v
+                    +-------------------+
+                    |   Gemini Provider  |
+                    +---------+---------+
+                              |
+                              v
+                     Structured JSON
+                              |
+                              v
+                       Streamlit UI
+```
+
+---
+
+# Request Processing Flow
 
 A typical request follows this sequence:
 
-
-
 ```text
-
-User
-
-&#x20;│
-
-&#x20;▼
-
-Streamlit
-
-&#x20;│
-
-&#x20;▼
-
-POST /chat
-
-&#x20;│
-
-&#x20;▼
-
+Customer
+   |
+   v
+Streamlit UI
+   |
+   v
+FastAPI POST /chat
+   |
+   v
 ChatService
-
-&#x20;│
-
-&#x20;▼
-
+   |
+   v
 IntentRouter
-
-&#x20;│
-
-&#x20;├───────────────┐
-
-&#x20;│               │
-
-&#x20;▼               ▼
-
-Gemini       Deterministic
-
-Router        Fallback
-
-&#x20;│               │
-
-&#x20;└───────┬───────┘
-
-&#x20;        ▼
-
-&#x20;  Detected Intent
-
-&#x20;        │
-
-&#x20;        ▼
-
-&#x20;Specialized Agent
-
-&#x20;        │
-
-&#x20;   ┌────┴────┐
-
-&#x20;   ▼         ▼
-
-&#x20; Tools      RAG
-
-&#x20;   │         │
-
-&#x20;   └────┬────┘
-
-&#x20;        ▼
-
-&#x20;     Context
-
-&#x20;        │
-
-&#x20;        ▼
-
-&#x20;     Gemini
-
-&#x20;        │
-
-&#x20;        ├── Success
-
-&#x20;        │
-
-&#x20;        └── Failure
-
-&#x20;              │
-
-&#x20;              ▼
-
-&#x20;       Deterministic Answer
-
-&#x20;              │
-
-&#x20;              ▼
-
-&#x20;      Structured Response
-
-&#x20;              │
-
-&#x20;              ▼
-
-&#x20;         Streamlit UI
-
+   |
+   +----------------------+
+   |                      |
+Gemini                Deterministic
+   |                    fallback
+   |                      |
+   +----------+-----------+
+              |
+              v
+       Detected Intent
+              |
+              v
+      Specialized Agent
+              |
+       +------+------+
+       |             |
+       v             v
+      RAG          Tool
+       |             |
+       +------+------+
+              |
+              v
+       Grounded Prompt
+              |
+              v
+       Gemini Generation
+              |
+              +----------------+
+              |                |
+           Success           Failure
+              |                |
+              v                v
+       AI-generated       Deterministic
+          answer            fallback
+              |                |
+              +-------+--------+
+                      |
+                      v
+              Structured JSON
+                      |
+                      v
+                 Streamlit
 ```
 
+---
 
+# Architecture Components
 
-\---
+## Frontend
 
+The frontend is implemented using Streamlit.
 
+Responsibilities include:
 
-\# 🧪 Task 1 — Build an AI Assistant
+* Accepting customer messages
+* Sending requests to the backend
+* Displaying responses
+* Providing a simple user-facing interface
 
+---
 
+## Backend
 
-\## LLM Integration
+The backend is implemented using FastAPI.
 
+Responsibilities include:
 
+* API request handling
+* Request validation
+* Chat orchestration
+* Routing
+* Tool execution
+* RAG retrieval
+* LLM interaction
+* Response normalization
+* Error handling
 
-The application integrates with Google's Gemini API.
+---
 
+## Chat Service
 
+The central orchestration layer is:
 
-Gemini is used for two primary functions:
+```text
+backend/services/chat_service.py
+```
 
+The service coordinates:
 
+```text
+Routing
+   |
+Tools
+   |
+RAG
+   |
+Specialized Agent
+   |
+LLM
+   |
+Fallback
+   |
+Structured Response
+```
 
-\### 1. Intent Routing
+---
 
+## Intent Router
 
+The router is implemented in:
 
-The model receives a specialized routing prompt and must classify the request into exactly one supported intent.
+```text
+backend/routing/router.py
+```
 
+The router follows a hybrid strategy.
 
+Primary path:
+
+```text
+Customer message
+       |
+       v
+Gemini classifier
+       |
+       v
+Intent + confidence
+```
+
+Fallback path:
+
+```text
+Customer message
+       |
+       v
+Deterministic classifier
+       |
+       v
+Intent + confidence
+```
+
+---
+
+# Task 1 - Build an AI Assistant
+
+The first task focuses on building an AI assistant using modern AI engineering techniques.
+
+ShopAssist AI implements the major requirements through a combination of Gemini, RAG, tools, specialized agents, structured outputs, and local model serving architecture.
+
+---
+
+# LLM Integration
+
+The primary hosted LLM provider is Gemini.
+
+The provider abstraction is implemented through:
+
+```text
+backend/llm/gemini_provider.py
+```
+
+The rest of the application communicates with the provider through an abstraction rather than directly coupling every component to the Gemini SDK.
+
+This allows additional providers to be introduced later.
+
+Potential future providers include:
+
+```text
+OpenAI
+Claude
+Azure OpenAI
+Local vLLM
+```
+
+---
+
+# Prompt Engineering
+
+The application uses dedicated system prompts and task-specific instructions.
+
+The main system prompt is located in:
+
+```text
+backend/llm/prompts.py
+```
+
+The routing prompt is defined in:
+
+```text
+backend/routing/router.py
+```
+
+The routing prompt explicitly defines:
+
+* Available intents
+* Intent descriptions
+* Important distinctions
+* Required JSON format
+* Confidence requirements
+
+---
+
+# Temperature and Top-P
+
+Response generation uses controlled generation parameters.
+
+The chat service specifies:
+
+```text
+temperature = 0.2
+top_p = 0.9
+```
+
+The relatively low temperature is intended to reduce unnecessary variation and produce more consistent support responses.
+
+---
+
+# Structured Output
+
+The application requests JSON responses from Gemini.
+
+Routing responses follow:
+
+```json
+{
+  "intent": "order_support",
+  "confidence": 0.95
+}
+```
+
+The complete chat response follows a structured schema containing:
+
+```text
+intent
+answer
+confidence
+sources
+tool_used
+routing_method
+generation_method
+```
+
+The backend also normalizes and validates important response fields.
+
+Confidence values are converted to floating-point values and constrained to:
+
+```text
+0.0 <= confidence <= 1.0
+```
+
+---
+
+# JSON Parsing
+
+The intent router supports several response formats.
+
+It first attempts to parse the complete response as JSON.
+
+If that fails, it attempts to extract JSON from:
+
+````text
+```json
+{ ... }
+````
+
+````
+
+It also attempts to locate a JSON object inside the response.
+
+Malformed or unusable output results in deterministic fallback routing.
+
+---
+
+# Intent Routing
+
+ShopAssist AI supports nine intent categories.
+
+## order_support
+
+Used for:
+
+- Existing order questions
+- Order status
+- Order number
+- Processing status
+- Shipped status
+- Delivered status
+
+Examples:
+
+```text
+Where is my order?
+What is the status of ORD-1002?
+Where is my order ORD-1001?
+````
+
+---
+
+## shipping
+
+Used for:
+
+* Shipping methods
+* Delivery time
+* Estimated delivery
+* Tracking
+* Shipping delays
+* Delivery information
+
+Examples:
+
+```text
+How long does shipping take?
+What is the delivery time?
+When will my package arrive?
+```
+
+---
+
+## returns
+
+Used for:
+
+* Returning products
+* Return eligibility
+* Return policies
+* Starting a return
+
+Examples:
+
+```text
+Can I return this?
+I want to return something I bought.
+```
+
+---
+
+## refunds
+
+Used for:
+
+* Refund status
+* Refund processing
+* Missing refunds
+* Money-back questions
 
 Example:
 
-
-
-```json
-
-{
-
-&#x20; "intent": "returns",
-
-&#x20; "confidence": 0.95
-
-}
-
+```text
+Where is my refund?
 ```
 
+---
 
+## cancellations
 
-\### 2. Response Generation
+Used for requests to cancel orders.
 
-
-
-After routing, the system builds a grounded prompt containing:
-
-
-
-\* Customer message
-
-\* Detected intent
-
-\* Specialized agent instructions
-
-\* Retrieved knowledge
-
-\* Tool execution results
-
-\* Safety constraints
-
-
-
-Gemini then generates the customer-facing response.
-
-
-
-\---
-
-
-
-\# ✍️ Prompt Engineering
-
-
-
-ShopAssist AI uses separate prompts for different responsibilities.
-
-
-
-\## Routing Prompt
-
-
-
-The routing prompt defines:
-
-
-
-\* Available intents
-
-\* Intent definitions
-
-\* Important distinctions
-
-\* Expected JSON format
-
-\* Confidence requirements
-
-
-
-For example:
-
-
+Example:
 
 ```text
-
-"Where is my order?" → order\_support
-
-
-
-"What is the delivery time?" → shipping
-
-
-
-"Can I return this?" → returns
-
-
-
-"Where is my refund?" → refunds
-
+I want to cancel my order.
 ```
 
+---
 
+## payments
 
-The router is explicitly instructed to return JSON rather than natural-language explanations.
+Used for:
 
+* Failed payments
+* Payment methods
+* Card problems
+* Billing
+* Payment issues
 
-
-\---
-
-
-
-\## Generation Prompt
-
-
-
-The generation prompt combines all available context:
-
-
+Example:
 
 ```text
-
-CUSTOMER MESSAGE
-
-
-
-DETECTED INTENT
-
-
-
-SPECIALIZED AGENT INSTRUCTIONS
-
-
-
-RETRIEVED KNOWLEDGE BASE CONTEXT
-
-
-
-TOOL EXECUTION RESULT
-
+My payment failed.
 ```
 
+---
 
+## account_support
 
-The model is instructed to:
+Used for:
 
+* Password problems
+* Login problems
+* Account access
+* Compromised accounts
 
-
-\* Avoid inventing policies
-
-\* Avoid inventing transactional information
-
-\* Treat tool results as authoritative
-
-\* Use retrieved knowledge for policy questions
-
-\* Protect sensitive information
-
-\* Never request passwords
-
-\* Never request CVV
-
-\* Never request complete card numbers
-
-\* Keep responses concise
-
-
-
-\---
-
-
-
-\# 📦 Structured Output
-
-
-
-The backend requests structured JSON responses.
-
-
-
-The expected response format is:
-
-
-
-```json
-
-{
-
-&#x20; "intent": "returns",
-
-&#x20; "answer": "Yes. This order is currently eligible for return.",
-
-&#x20; "confidence": 0.95,
-
-&#x20; "sources": \[],
-
-&#x20; "tool\_used": "check\_return\_eligibility"
-
-}
-
-```
-
-
-
-The backend additionally records:
-
-
+Example:
 
 ```text
-
-routing\_method
-
-generation\_method
-
-cached
-
+I forgot my password.
 ```
 
+---
 
+## product_information
 
-This allows the system to distinguish between:
+Used for:
 
+* Product specifications
+* Dimensions
+* Availability
+* Compatibility
+* Features
+* Accessories
 
+Example:
 
 ```text
-
-gemini
-
-deterministic\_fallback
-
+Is this compatible with my device?
 ```
 
+---
 
+## general_support
 
-for routing and generation.
+Used when the request does not clearly match another supported category.
 
+---
 
+# Deterministic Routing
 
-\---
+The deterministic fallback contains explicit patterns for common support requests.
 
-
-
-\# 🧭 Intent Routing
-
-
-
-The `IntentRouter` implements a hybrid architecture.
-
-
-
-\## Primary Path
-
-
+Examples include:
 
 ```text
-
-Customer Message
-
-&#x20;     │
-
-&#x20;     ▼
-
-Gemini
-
-&#x20;     │
-
-&#x20;     ▼
-
-JSON Classification
-
+cancel my order
+refund
+return this
+payment failed
+forgot my password
+compatible
+shipping
+tracking
+where is my order
+order status
 ```
 
+The fallback allows basic customer-support functionality to continue when the LLM is unavailable.
 
+---
 
-\## Fallback Path
+# Specialized Agents
 
-
-
-If Gemini fails:
-
-
+Specialized agent instructions are provided by:
 
 ```text
-
-Customer Message
-
-&#x20;     │
-
-&#x20;     ▼
-
-Keyword-Based Classifier
-
-&#x20;     │
-
-&#x20;     ▼
-
-Intent
-
+backend/agents/agents.py
 ```
 
-
-
-This prevents a temporary LLM outage from completely disabling routing.
-
-
-
-\---
-
-
-
-\# 🏷️ Supported Intents
-
-
-
-| Intent                | Example                            |
-
-| --------------------- | ---------------------------------- |
-
-| `order\_support`       | Where is my order?                 |
-
-| `shipping`            | How long does shipping take?       |
-
-| `returns`             | I want to return something         |
-
-| `refunds`             | Where is my refund?                |
-
-| `cancellations`       | Can I cancel my order?             |
-
-| `payments`            | My payment failed                  |
-
-| `account\_support`     | I forgot my password               |
-
-| `product\_information` | Is this compatible with my device? |
-
-| `general\_support`     | General customer support           |
-
-
-
-\---
-
-
-
-\# 👨‍💼 Specialized Agent Layer
-
-
-
-After routing, the system retrieves specialized instructions using:
-
-
+The detected intent is passed to:
 
 ```text
-
-get\_agent\_instruction(intent)
-
+get_agent_instruction(intent)
 ```
 
+This provides intent-specific behavioral guidance to the response generator.
 
-
-This creates a separation between:
-
-
+The architecture therefore separates:
 
 ```text
-
 Routing
-
 ```
-
-
-
-and:
-
-
-
-```text
-
-Response behavior
-
-```
-
-
-
-The architecture can therefore be extended with additional agents without redesigning the entire application.
-
-
-
-\---
-
-
-
-\# 🛠️ Tool Calling
-
-
-
-ShopAssist AI includes a centralized tool registry.
-
-
-
-Tools are selected based on intent and available identifiers.
-
-
-
-Currently implemented transactional tools include:
-
-
-
-\### Order Status
-
-
-
-```text
-
-get\_order\_status
-
-```
-
-
-
-\### Product Information
-
-
-
-```text
-
-get\_product\_info
-
-```
-
-
-
-\### Return Eligibility
-
-
-
-```text
-
-check\_return\_eligibility
-
-```
-
-
-
-The system extracts identifiers from user messages.
-
-
-
-For example:
-
-
-
-```text
-
-ORD-1001
-
-ORD-1002
-
-ORD-1003
-
-```
-
-
-
-and:
-
-
-
-```text
-
-PROD-001
-
-PROD-002
-
-PROD-003
-
-```
-
-
-
-\---
-
-
-
-\# 🔎 RAG Pipeline
-
-
-
-ShopAssist AI includes a Retrieval-Augmented Generation layer.
-
-
-
-The RAG pipeline follows:
-
-
-
-```text
-
-Documents
-
-&#x20;  │
-
-&#x20;  ▼
-
-Document Ingestion
-
-&#x20;  │
-
-&#x20;  ▼
-
-Chunking
-
-&#x20;  │
-
-&#x20;  ▼
-
-Embeddings
-
-&#x20;  │
-
-&#x20;  ▼
-
-Vector Storage
-
-&#x20;  │
-
-&#x20;  ▼
-
-Similarity Retrieval
-
-&#x20;  │
-
-&#x20;  ▼
-
-Top-K Relevant Chunks
-
-&#x20;  │
-
-&#x20;  ▼
-
-Formatted Context
-
-&#x20;  │
-
-&#x20;  ▼
-
-LLM Prompt
-
-```
-
-
-
-The application retrieves relevant knowledge using:
-
-
-
-```python
-
-results = retrieve(
-
-&#x20;   message,
-
-&#x20;   top\_k=3,
-
-)
-
-```
-
-
-
-The retrieved results are then converted into prompt context using:
-
-
-
-```python
-
-format\_context(results)
-
-```
-
-
-
-This provides the generation model with relevant knowledge instead of relying exclusively on its internal knowledge.
-
-
-
-\---
-
-
-
-\# 📚 Knowledge Grounding
-
-
-
-The generation layer follows a grounded-response strategy.
-
-
-
-The system explicitly instructs the LLM:
-
-
-
-```text
-
-Do not invent policies.
-
-
-
-Do not invent customer/order/product information.
-
-
-
-Treat tool results as authoritative for mock transactional data.
-
-
-
-Use retrieved knowledge for policy and FAQ information.
-
-
-
-If the knowledge base and tools are insufficient, say so clearly.
-
-```
-
-
-
-This reduces hallucination risk and separates:
-
-
-
-```text
-
-Transactional truth
-
-```
-
-
 
 from:
 
-
-
 ```text
-
-Knowledge-base information
-
+Agent behavior
 ```
 
+---
 
+# Tool Calling
 
-\---
-
-
-
-\# 🖥️ Local LLM Deployment
-
-
-
-The Docker Compose configuration includes an optional vLLM service.
-
-
-
-The configured local model is:
-
-
+Tool execution is managed by:
 
 ```text
-
-Qwen/Qwen3-0.6B
-
+backend/tools/registry.py
 ```
 
+The chat service determines whether a relevant tool can be executed based on the detected intent and extracted identifiers.
 
+---
 
-The vLLM service uses the OpenAI-compatible API architecture.
+# Order Tool
 
-
-
-The configured endpoint inside Docker is:
-
-
+For order-related requests, the system extracts order IDs using the pattern:
 
 ```text
-
-http://vllm:8000/v1
-
+ORD-<number>
 ```
 
-
-
-The configuration supports:
-
-
+Example:
 
 ```text
-
-LOCAL\_LLM\_MODEL
-
-LOCAL\_LLM\_BASE\_URL
-
-```
-
-
-
-The vLLM service is placed behind the:
-
-
-
-```text
-
-local-llm
-
-```
-
-
-
-Docker Compose profile.
-
-
-
-This means the local LLM infrastructure can be enabled when required without forcing it to run during normal Gemini-based development.
-
-
-
-\---
-
-
-
-\# 🐳 Containerization
-
-
-
-ShopAssist AI is containerized using Docker.
-
-
-
-The application uses a Python 3.12 slim base image.
-
-
-
-The Docker image installs dependencies from:
-
-
-
-```text
-
-requirements.txt
-
-```
-
-
-
-and copies:
-
-
-
-```text
-
-backend/
-
-frontend/
-
-data/
-
-scripts/
-
-```
-
-
-
-into the container.
-
-
-
-\---
-
-
-
-\# 🐳 Docker Compose
-
-
-
-The application is orchestrated using Docker Compose.
-
-
-
-The main services are:
-
-
-
-```text
-
-backend
-
-frontend
-
-```
-
-
-
-An optional:
-
-
-
-```text
-
-vllm
-
-```
-
-
-
-service is provided for local LLM inference.
-
-
-
-\---
-
-
-
-\## Backend
-
-
-
-```yaml
-
-backend:
-
-&#x20; build: .
-
-&#x20; container\_name: shopassist-backend
-
-```
-
-
-
-Host port:
-
-
-
-```text
-
-8002
-
-```
-
-
-
-Container port:
-
-
-
-```text
-
-8000
-
-```
-
-
-
-Therefore:
-
-
-
-```text
-
-localhost:8002 → backend:8000
-
-```
-
-
-
-\---
-
-
-
-\## Frontend
-
-
-
-The Streamlit frontend runs on:
-
-
-
-```text
-
-8501
-
-```
-
-
-
-The frontend communicates with the backend through the Docker Compose network.
-
-
-
-Inside Docker:
-
-
-
-```text
-
-http://backend:8000
-
-```
-
-
-
-\---
-
-
-
-\# 🗃️ Mock Transactional Data
-
-
-
-The project includes mock e-commerce data.
-
-
-
-Example orders include:
-
-
-
-```text
-
 ORD-1001
-
 ORD-1002
-
 ORD-1003
-
 ```
 
+The order status tool returns transactional information such as:
 
+* Order ID
+* Status
+* Carrier
+* Tracking number
+* Estimated delivery
 
-\### ORD-1001
+---
 
+# Product Tool
 
+Product IDs follow:
 
 ```text
-
-Status: shipped
-
-Carrier: DHL
-
-Tracking: DHL123456789
-
-Estimated Delivery: 2026-09-04
-
+PROD-<number>
 ```
 
+The product information tool can return:
 
+* Product name
+* Price
+* Stock
+* Description
+* Product information
 
-\### ORD-1002
+---
 
+# Return Eligibility Tool
 
+Return requests containing an order ID can invoke:
 
 ```text
-
-Status: processing
-
-Estimated Delivery: 2026-09-06
-
+check_return_eligibility
 ```
 
-
-
-\### ORD-1003
-
-
+The current mock business rule is:
 
 ```text
-
-Status: delivered
-
-Carrier: FedEx
-
-Tracking: FDX987654321
-
-Estimated Delivery: 2026-08-28
-
+Only delivered orders can currently be returned.
 ```
 
-
-
-The transactional data is treated as authoritative by the application when a relevant tool is executed.
-
-
-
-\---
-
-
-
-\# 🔄 Return Eligibility Example
-
-
-
-The return workflow demonstrates the complete routing and tool architecture.
-
-
-
-Customer:
-
-
+For example:
 
 ```text
-
-I want to return order ORD-1003.
-
+ORD-1001
 ```
 
-
-
-Routing:
-
-
+is shipped and therefore not currently eligible.
 
 ```text
-
-returns
-
+ORD-1003
 ```
 
+is delivered and therefore eligible.
 
+---
 
-Tool:
+# Mock Transactional Data
 
-
+Transactional data is stored in:
 
 ```text
-
-check\_return\_eligibility
-
+data/mock_data/orders.json
 ```
 
+Example order:
 
+```json
+{
+  "ORD-1001": {
+    "order_id": "ORD-1001",
+    "customer_id": "CUS-001",
+    "status": "shipped",
+    "carrier": "DHL",
+    "tracking_number": "DHL123456789",
+    "estimated_delivery": "2026-09-04"
+  }
+}
+```
 
-Because ORD-1003 is delivered, the system returns:
+The data is intentionally mock data for demonstration and development.
 
+---
 
+# RAG Pipeline
+
+The application includes a Retrieval-Augmented Generation pipeline.
+
+The general process is:
 
 ```text
-
-Yes. This order is currently eligible for return under the available return policy.
-
+Documents
+   |
+   v
+Ingestion
+   |
+   v
+Chunking
+   |
+   v
+Embeddings
+   |
+   v
+Vectorized Knowledge
+   |
+   v
+Semantic Retrieval
+   |
+   v
+Top-K Context
+   |
+   v
+LLM Prompt
 ```
 
-
-
-For ORD-1001, which is shipped:
-
-
+The retrieval implementation is located in:
 
 ```text
-
-This order is not currently eligible for return. Only delivered orders can currently be returned.
-
+backend/rag/retrieval.py
 ```
 
+---
 
+# Document Ingestion and Chunking
 
-\---
+The RAG pipeline processes knowledge-base content into smaller retrievable pieces.
 
+Chunking allows the system to retrieve relevant portions instead of passing an entire document to the model.
 
+This reduces unnecessary context and helps keep prompts focused.
 
-\# 📦 Order Status Example
+---
 
+# Embeddings and Retrieval
 
+Documents are converted into embedding representations.
 
-Customer:
-
-
+When a customer asks a question:
 
 ```text
-
-What is the status of ORD-1002?
-
+Customer question
+       |
+       v
+Query representation
+       |
+       v
+Similarity retrieval
+       |
+       v
+Top-K relevant results
 ```
 
-
-
-The router detects:
-
-
+The current chat service retrieves:
 
 ```text
-
-order\_support
-
+top_k = 3
 ```
 
+The retrieved results are then formatted into context for response generation.
 
+---
 
-The system extracts:
+# Knowledge Sources
 
+Retrieved metadata can include source filenames.
 
+The service collects unique filenames and returns them through:
 
 ```text
-
-ORD-1002
-
+sources
 ```
 
+This provides a structured representation of the knowledge sources used during processing.
 
+---
 
-and calls:
+# Grounded Generation
 
-
+The generated response receives:
 
 ```text
-
-get\_order\_status
-
+Customer message
++
+Detected intent
++
+Specialized agent instructions
++
+Retrieved knowledge
++
+Tool result
 ```
 
+The prompt explicitly instructs the model to:
 
+* Avoid inventing policies
+* Avoid inventing customer information
+* Treat transactional tool results as authoritative
+* Use retrieved knowledge for policies and FAQs
+* Clearly state when information is insufficient
+* Protect sensitive information
 
-The response is:
+---
 
+# Task 2 - Productionization
 
+The second task focuses on transforming the assistant into a deployable application.
+
+The implementation includes:
+
+* Web UI
+* API backend
+* Docker
+* Docker Compose
+* Caching
+* Fallbacks
+* Error handling
+* Rate-limit handling
+* Graceful degradation
+* Performance considerations
+
+---
+
+# Web UI
+
+The frontend is implemented using Streamlit.
+
+Main frontend file:
 
 ```text
-
-Your order ORD-1002 is currently processing. The estimated delivery date is 2026-09-06.
-
+frontend/app.py
 ```
 
+The frontend communicates with the FastAPI backend.
 
+Architecture:
 
-\---
+```text
+Browser
+   |
+   v
+Streamlit
+   |
+   | HTTP
+   v
+FastAPI
+```
 
+The frontend is exposed on:
 
+```text
+http://localhost:8501
+```
 
-\# ⚡ Caching
+---
 
+# Backend API
 
+The FastAPI backend provides the application API.
+
+The backend is exposed externally on:
+
+```text
+http://localhost:8002
+```
+
+The application container internally serves FastAPI on:
+
+```text
+http://0.0.0.0:8000
+```
+
+Docker maps:
+
+```text
+8002 -> 8000
+```
+
+---
+
+# Health Endpoint
+
+The backend exposes:
+
+```text
+GET /health
+```
+
+A successful response is:
+
+```text
+status   service
+------   -------
+healthy  shopassist-ai
+```
+
+This provides a simple health check for the running backend.
+
+---
+
+# Chat Endpoint
+
+Customer requests are sent to:
+
+```text
+POST /chat
+```
+
+Example request:
+
+```json
+{
+  "message": "What is the status of ORD-1002?"
+}
+```
+
+Example response:
+
+```json
+{
+  "answer": "Your order ORD-1002 is currently processing. The estimated delivery date is 2026-09-06.",
+  "confidence": 0.95,
+  "sources": [],
+  "tool_used": "get_order_status",
+  "intent": "order_support",
+  "routing_method": "deterministic_fallback",
+  "generation_method": "deterministic_fallback"
+}
+```
+
+---
+
+# Caching
 
 The application supports prompt/response caching.
 
+Caching provides several benefits:
 
+* Avoids repeated model requests
+* Reduces unnecessary API usage
+* Improves response latency
+* Helps handle repeated customer questions
+* Reduces dependence on the external provider
 
-Repeated requests can therefore avoid unnecessary repeated LLM generation.
+A cached response can be returned without executing the complete generation pipeline again.
 
+---
 
+# Performance Engineering
 
-Responses can include:
+Several design decisions reduce unnecessary computation.
 
+## Top-K Retrieval
 
+The RAG pipeline retrieves only a limited number of results.
+
+Current configuration:
 
 ```text
-
-cached: True
-
+top_k = 3
 ```
 
+---
 
+## Deterministic Tool Responses
 
-or:
+Transactional requests can be answered from authoritative tool results.
 
+This avoids unnecessary generation when a deterministic answer is sufficient.
 
+---
 
-```text
+## Lightweight Fallback
 
-cached: False
+The deterministic classifier uses simple string matching.
 
-```
+This makes fallback routing fast and independent of an external model provider.
 
+---
 
+## Caching
 
-This improves efficiency for repeated queries and reduces unnecessary calls to the LLM provider.
+Repeated requests can be served from cache instead of invoking the LLM again.
 
+---
 
+## Containerized Services
 
-Caching is particularly useful when operating against rate-limited API tiers.
+Docker provides reproducible runtime environments for the backend and frontend.
 
+---
 
+# Reliability
 
-\---
+Reliability is a major component of the implementation.
 
+The system is designed not to depend completely on the availability of Gemini.
 
+The architecture provides fallback paths for:
 
-\# 🛡️ Reliability and Graceful Degradation
+* API failures
+* Rate limits
+* Invalid JSON
+* Invalid confidence values
+* Missing identifiers
+* Missing knowledge
+* Tool failures
+* Generation failures
 
+---
 
+# Gemini Failure Handling
 
-Reliability is one of the major productionization features of ShopAssist AI.
-
-
-
-The application does not depend entirely on Gemini being available.
-
-
-
-\---
-
-
-
-\## Gemini Rate Limiting
-
-
-
-During testing, the Gemini API returned HTTP 429 rate-limit errors when the free-tier quota was exceeded.
-
-
-
-The backend correctly detected this condition.
-
-
-
-Example:
-
-
+If Gemini generation fails:
 
 ```text
-
-RateLimitError: Error code: 429
-
-```
-
-
-
-Instead of crashing, the application switched to:
-
-
-
-```text
-
-deterministic\_fallback
-
-```
-
-
-
-\---
-
-
-
-\# 🔁 Deterministic Routing Fallback
-
-
-
-When Gemini routing is unavailable:
-
-
-
-```text
-
 Gemini
-
-&#x20; │
-
-&#x20; X
-
-&#x20; │
-
-&#x20; ▼
-
-Deterministic Classifier
-
+  |
+  X
+  |
+  v
+Exception handling
+  |
+  v
+Deterministic fallback
 ```
 
+The failure is logged rather than causing the entire API request to fail.
 
+---
 
-The classifier uses predefined phrases to identify intents.
+# Rate-Limit Handling
 
-
-
-For example:
-
-
+During testing, the application encountered an actual Gemini API rate-limit response:
 
 ```text
-
-"return something I bought"
-
+429 Too Many Requests
 ```
 
+The provider reported that the free-tier request quota had been exceeded.
 
+Instead of terminating the request, the application followed the fallback path.
 
-is mapped to:
-
-
+The observed behavior was:
 
 ```text
-
-returns
-
+Gemini request
+      |
+      v
+429 Rate Limit
+      |
+      v
+Exception handled
+      |
+      v
+Deterministic routing/generation
+      |
+      v
+HTTP 200 response
 ```
 
+This demonstrates graceful degradation under provider quota limitations.
 
+---
 
-and:
+# Deterministic Fallback Generation
 
+The deterministic answer generator is implemented in the chat service.
 
+For example, when an order-status tool succeeds, the application can directly construct a response using:
 
 ```text
-
-"What is the status of ORD-1002?"
-
+Order status
+Carrier
+Tracking number
+Estimated delivery
 ```
 
+This ensures transactional information can still be returned even if Gemini generation is unavailable.
 
+---
 
-is mapped to:
+# Error Handling
 
+The system handles exceptions at multiple levels.
 
+Examples include:
 
 ```text
-
-order\_support
-
+LLM provider failures
+JSON parsing failures
+Invalid confidence values
+Tool failures
+Missing identifiers
+Empty messages
+Unavailable knowledge
 ```
 
-
-
-This allows the application to continue operating during LLM failures.
-
-
-
-\---
-
-
-
-\# 🔁 Deterministic Generation Fallback
-
-
-
-The same principle is applied during answer generation.
-
-
-
-If Gemini generation fails, the backend uses deterministic responses based on available tool results.
-
-
-
-For example:
-
-
+Empty messages are rejected with:
 
 ```text
-
-get\_order\_status
-
+Message cannot be empty.
 ```
 
+---
 
+# Graceful Degradation
 
-produces a deterministic answer containing:
-
-
-
-\* Order ID
-
-\* Status
-
-\* Carrier
-
-\* Tracking number
-
-\* Estimated delivery
-
-
-
-This is particularly important for transactional queries because the response can be generated directly from authoritative tool data.
-
-
-
-\---
-
-
-
-\# 🚨 Error Handling
-
-
-
-The backend catches provider-level exceptions.
-
-
-
-Instead of terminating the application, the error is logged and the fallback path is executed.
-
-
-
-The architecture therefore follows:
-
-
+The complete reliability strategy is:
 
 ```text
-
-Primary AI Path
-
-&#x20;     │
-
-&#x20;     ▼
-
-Failure?
-
-&#x20;┌────┴────┐
-
-&#x20;No        Yes
-
-&#x20;│          │
-
-&#x20;▼          ▼
-
-Response   Fallback
-
+                    Request
+                       |
+                       v
+                Intent Router
+                       |
+              +--------+--------+
+              |                 |
+           Gemini          Deterministic
+              |               fallback
+              +--------+--------+
+                       |
+                       v
+                Intent detected
+                       |
+                       v
+                 Tool / RAG
+                       |
+                       v
+                 Generation
+                       |
+              +--------+--------+
+              |                 |
+           Gemini          Deterministic
+           success            fallback
+              |                 |
+              +--------+--------+
+                       |
+                       v
+                 JSON response
 ```
 
+---
 
-
-This improves system resilience.
-
-
-
-\---
-
-
-
-\# 🌐 Web Interface
-
-
-
-The application includes a Streamlit-based web interface.
-
-
-
-The frontend provides:
-
-
-
-```text
-
-ShopAssist AI
-
-AI-powered e-commerce customer support
-
-```
-
-
-
-Users can enter natural-language questions and receive responses without interacting directly with the FastAPI API.
-
-
-
-The frontend is available at:
-
-
-
-```text
-
-http://localhost:8501
-
-```
-
-
-
-\---
-
-
-
-\# 🧪 Backend API
-
-
-
-\## Health Check
-
-
-
-```http
-
-GET /health
-
-```
-
-
-
-Example:
-
-
-
-```powershell
-
-Invoke-RestMethod http://localhost:8002/health
-
-```
-
-
-
-Expected:
-
-
-
-```text
-
-status   service
-
-\------   -------
-
-healthy  shopassist-ai
-
-```
-
-
-
-\---
-
-
-
-\# 💬 Chat API
-
-
-
-The main endpoint is:
-
-
-
-```http
-
-POST /chat
-
-```
-
-
-
-Example PowerShell request:
-
-
-
-```powershell
-
-Invoke-RestMethod `
-
-&#x20; -Uri http://localhost:8002/chat `
-
-&#x20; -Method Post `
-
-&#x20; -ContentType "application/json" `
-
-&#x20; -Body '{"message":"Where is my order ORD-1001?"}'
-
-```
-
-
-
-\---
-
-
-
-\# 📤 Example Structured Response
-
-
-
-A successful response has the following conceptual structure:
-
-
-
-```json
-
-{
-
-&#x20; "answer": "Your order ORD-1001 is currently shipped. The carrier is DHL. Your tracking number is DHL123456789. The estimated delivery date is 2026-09-04.",
-
-&#x20; "confidence": 0.95,
-
-&#x20; "sources": \[],
-
-&#x20; "tool\_used": "get\_order\_status",
-
-&#x20; "intent": "order\_support",
-
-&#x20; "routing\_method": "deterministic\_fallback",
-
-&#x20; "generation\_method": "deterministic\_fallback",
-
-&#x20; "cached": false
-
-}
-
-```
-
-
-
-The exact routing and generation methods depend on whether Gemini is available and whether the response was retrieved from cache.
-
-
-
-\---
-
-
-
-\# 🧪 Example Requests
-
-
-
-\## Return Request
-
-
-
-```text
-
-I want to return something I bought.
-
-```
-
-
-
-Expected behavior:
-
-
-
-```text
-
-Intent → returns
-
-```
-
-
-
-The assistant requests an order ID because a transactional return check requires an order identifier.
-
-
-
-\---
-
-
-
-\## Eligible Return
-
-
-
-```text
-
-I want to return order ORD-1003.
-
-```
-
-
-
-Expected:
-
-
-
-```text
-
-Yes. This order is currently eligible for return under the available return policy.
-
-```
-
-
-
-\---
-
-
-
-\## Ineligible Return
-
-
-
-```text
-
-I want to return order ORD-1001.
-
-```
-
-
-
-Expected:
-
-
-
-```text
-
-This order is not currently eligible for return. Only delivered orders can currently be returned.
-
-```
-
-
-
-\---
-
-
-
-\## Order Status
-
-
-
-```text
-
-What is the status of ORD-1002?
-
-```
-
-
-
-Expected:
-
-
-
-```text
-
-Your order ORD-1002 is currently processing.
-
-The estimated delivery date is 2026-09-06.
-
-```
-
-
-
-\---
-
-
-
-\## Missing Order ID
-
-
-
-```text
-
-Where is my order?
-
-```
-
-
-
-Expected:
-
-
-
-```text
-
-I can help you check your order status.
-
-Please provide your order ID.
-
-```
-
-
-
-\---
-
-
-
-\# ⚙️ Configuration
-
-
+# Configuration
 
 The application uses environment variables for configuration.
 
-
-
-Important settings include:
-
-
+Important configuration values include:
 
 ```text
-
-LLM\_PROVIDER
-
-GEMINI\_MODEL
-
-GEMINI\_API\_KEY
-
-LOCAL\_LLM\_BASE\_URL
-
-LOCAL\_LLM\_MODEL
-
-HUGGING\_FACE\_HUB\_TOKEN
-
+LLM_PROVIDER
+GEMINI_MODEL
+GEMINI_API_KEY
+LOCAL_LLM_BASE_URL
+LOCAL_LLM_MODEL
+HUGGING_FACE_HUB_TOKEN
 ```
-
-
 
 Example:
 
-
-
-```text
-
-LLM\_PROVIDER=gemini
-
-GEMINI\_MODEL=gemini-3.6-flash
-
-LOCAL\_LLM\_MODEL=Qwen/Qwen3-0.6B
-
+```env
+LLM_PROVIDER=gemini
+GEMINI_MODEL=gemini-3.6-flash
+LOCAL_LLM_MODEL=Qwen/Qwen3-0.6B
 ```
 
+API credentials should never be committed to GitHub.
 
+The `.env` file should remain excluded using `.gitignore`.
 
-API keys should never be committed to GitHub.
+---
 
+# Local LLM Deployment
 
+The architecture also supports optional local model serving.
 
-The `.env` file should remain excluded through `.gitignore`.
+A local model can be served using vLLM.
 
-
-
-\---
-
-
-
-\# 📁 Project Structure
-
-
-
-The project follows a modular architecture.
-
-
+Example model configuration:
 
 ```text
+Qwen/Qwen3-0.6B
+```
 
+The local deployment architecture is:
+
+```text
+ShopAssist Backend
+        |
+        v
+Local LLM Provider
+        |
+        v
+vLLM Server
+        |
+        v
+Open-Source LLM
+```
+
+This provides an alternative to the hosted Gemini provider.
+
+---
+
+# Why vLLM
+
+vLLM is designed for efficient serving of transformer-based language models.
+
+It can provide:
+
+* Local inference
+* Efficient request handling
+* GPU acceleration
+* High-throughput serving
+* Model serving through an API
+
+The local LLM option is therefore suitable for deployments where model weights are available locally.
+
+---
+
+# Dockerization
+
+The application is containerized using Docker.
+
+The backend Dockerfile packages:
+
+```text
+Python runtime
+Dependencies
+Backend source
+Frontend source
+Data
+Scripts
+```
+
+The application uses:
+
+```text
+python:3.12-slim
+```
+
+as its base image.
+
+---
+
+# Docker Compose
+
+The complete application is orchestrated using Docker Compose.
+
+The Compose configuration manages:
+
+```text
+Backend
+Frontend
+```
+
+The backend is exposed through:
+
+```text
+8002:8000
+```
+
+The frontend is exposed through:
+
+```text
+8501:8501
+```
+
+---
+
+# Docker Services
+
+## Backend
+
+Service:
+
+```text
+backend
+```
+
+Container:
+
+```text
+shopassist-backend
+```
+
+Port:
+
+```text
+8002
+```
+
+---
+
+## Frontend
+
+Service:
+
+```text
+frontend
+```
+
+Container:
+
+```text
+shopassist-frontend
+```
+
+Port:
+
+```text
+8501
+```
+
+---
+
+# Project Structure
+
+```text
 ShopAssist-AI/
-
-│
-
-├── backend/
-
-│   │
-
-│   ├── main.py
-
-│   │
-
-│   ├── agents/
-
-│   │   └── agents.py
-
-│   │
-
-│   ├── llm/
-
-│   │   ├── gemini\_provider.py
-
-│   │   └── prompts.py
-
-│   │
-
-│   ├── routing/
-
-│   │   └── router.py
-
-│   │
-
-│   ├── services/
-
-│   │   └── chat\_service.py
-
-│   │
-
-│   ├── rag/
-
-│   │   └── retrieval.py
-
-│   │
-
-│   └── tools/
-
-│       └── registry.py
-
-│
-
-├── frontend/
-
-│   └── app.py
-
-│
-
-├── data/
-
-│   └── mock\_data/
-
-│       └── orders.json
-
-│
-
-├── scripts/
-
-│
-
-├── Dockerfile
-
-├── docker-compose.yml
-
-├── requirements.txt
-
-├── .env
-
-├── .gitignore
-
-└── README.md
-
+|
++-- backend/
+|   |
+|   +-- main.py
+|   |
+|   +-- agents/
+|   |   +-- agents.py
+|   |
+|   +-- llm/
+|   |   +-- gemini_provider.py
+|   |   +-- prompts.py
+|   |
+|   +-- routing/
+|   |   +-- router.py
+|   |
+|   +-- services/
+|   |   +-- chat_service.py
+|   |
+|   +-- rag/
+|   |   +-- retrieval.py
+|   |
+|   +-- tools/
+|       +-- registry.py
+|
++-- frontend/
+|   +-- app.py
+|
++-- data/
+|   +-- mock_data/
+|       +-- orders.json
+|
++-- scripts/
+|
++-- docs/
+|   +-- architecture.png
+|
++-- Dockerfile
++-- docker-compose.yml
++-- requirements.txt
++-- .env
++-- .gitignore
++-- README.md
 ```
 
+---
 
+# Installation
 
-\---
-
-
-
-\# ▶️ Running the Application
-
-
-
-\## Prerequisites
-
-
+## Prerequisites
 
 Install:
 
+* Docker Desktop
+* Docker Compose
+* Git
 
+Python 3.12 is recommended for development outside Docker.
 
-\* Docker Desktop
+---
 
-\* Docker Compose
+# Environment Configuration
 
-\* Git
+Create a `.env` file in the project root.
 
+Example:
 
+```env
+LLM_PROVIDER=gemini
+GEMINI_API_KEY=your_api_key_here
+GEMINI_MODEL=gemini-3.6-flash
+LOCAL_LLM_BASE_URL=http://localhost:8001
+LOCAL_LLM_MODEL=Qwen/Qwen3-0.6B
+```
 
-For development outside Docker, Python 3.12 is recommended.
+Do not commit real API keys.
 
+---
 
-
-\---
-
-
-
-\# 🐳 Start the Application
-
-
+# Running the Application
 
 From the project directory:
 
-
-
 ```powershell
-
 docker compose up -d backend frontend
-
 ```
 
-
-
-Check the running containers:
-
-
+Check the containers:
 
 ```powershell
-
 docker compose ps
-
 ```
 
-
-
-Expected:
-
-
+Expected services:
 
 ```text
-
 shopassist-backend
-
 shopassist-frontend
-
 ```
 
+---
 
+# Building the Backend
 
-\---
-
-
-
-\# ❤️ Verify Backend Health
-
-
-
-Run:
-
-
+To rebuild the backend:
 
 ```powershell
-
-Invoke-RestMethod http://localhost:8002/health
-
+docker compose build backend
 ```
 
-
-
-Expected:
-
-
-
-```text
-
-status   service
-
-\------   -------
-
-healthy  shopassist-ai
-
-```
-
-
-
-\---
-
-
-
-\# 🌐 Open the Application
-
-
-
-Open:
-
-
-
-```text
-
-http://localhost:8501
-
-```
-
-
-
-The Streamlit interface should display:
-
-
-
-```text
-
-ShopAssist AI
-
-AI-powered e-commerce customer support
-
-```
-
-
-
-\---
-
-
-
-\# 📜 View Backend Logs
-
-
-
-Use:
-
-
+Then start it:
 
 ```powershell
+docker compose up -d backend
+```
 
+---
+
+# Restarting the Backend
+
+```powershell
+docker compose restart backend
+```
+
+---
+
+# Viewing Backend Logs
+
+```powershell
 docker compose logs --tail=100 backend
-
 ```
-
-
 
 Follow live logs:
 
-
-
 ```powershell
-
 docker compose logs -f backend
-
 ```
 
+---
 
-
-\---
-
-
-
-\# 🔄 Rebuild After Source Changes
-
-
-
-When backend source code changes:
-
-
+# Checking Container Status
 
 ```powershell
-
-docker compose build backend
-
-docker compose up -d backend
-
-```
-
-
-
-Verify:
-
-
-
-```powershell
-
 docker compose ps
-
 ```
 
+A healthy deployment should show both services as running.
 
+Example:
 
-Then:
+```text
+NAME                  SERVICE    STATUS
+shopassist-backend    backend    Up
+shopassist-frontend   frontend   Up
+```
 
+---
 
+# Backend Health Check
+
+Run:
 
 ```powershell
-
 Invoke-RestMethod http://localhost:8002/health
-
 ```
 
+Expected:
 
+```text
+status  service
+------  -------
+healthy shopassist-ai
+```
 
-\---
+---
 
+# Testing the Chat API
 
-
-\# 🧹 Stop the Application
-
-
+## Return Request
 
 ```powershell
-
-docker compose down
-
+Invoke-RestMethod `
+  -Uri http://localhost:8002/chat `
+  -Method Post `
+  -ContentType "application/json" `
+  -Body '{"message":"I want to return something I bought."}'
 ```
 
-
-
-This stops and removes the application containers and Compose network.
-
-
-
-\---
-
-
-
-\# 🧪 Testing the Application
-
-
-
-The implementation was tested through direct API requests and the Streamlit interface.
-
-
-
-The following scenarios were verified:
-
-
-
-\### Return request
-
-
+Expected behavior:
 
 ```text
-
-I want to return something I bought.
-
+Intent: returns
+Tool: none
 ```
 
+The assistant requests an order ID because return eligibility cannot be checked without an order identifier.
 
+---
 
-\### Eligible return
+# Return Eligibility Example
 
-
-
-```text
-
-I want to return order ORD-1003.
-
-```
-
-
-
-\### Ineligible return
-
-
+Request:
 
 ```text
-
 I want to return order ORD-1001.
-
 ```
 
-
-
-\### Shipped order
-
-
+Expected:
 
 ```text
+This order is not currently eligible for return.
+Only delivered orders can currently be returned.
+```
 
+---
+
+# Successful Return Example
+
+Request:
+
+```text
+I want to return order ORD-1003.
+```
+
+Expected:
+
+```text
+Yes. This order is currently eligible for return under the available return policy.
+```
+
+---
+
+# Order Status Example
+
+Request:
+
+```text
 Where is my order ORD-1001?
-
 ```
 
-
-
-\### Processing order
-
-
+Expected:
 
 ```text
+Your order ORD-1001 is currently shipped.
+The carrier is DHL.
+Your tracking number is DHL123456789.
+The estimated delivery date is 2026-09-04.
+```
 
+---
+
+# Another Order Status Example
+
+Request:
+
+```text
 What is the status of ORD-1002?
-
 ```
 
-
-
-\### Missing identifier
-
-
+Expected:
 
 ```text
+Your order ORD-1002 is currently processing.
+The estimated delivery date is 2026-09-06.
+```
 
+The response uses:
+
+```text
+get_order_status
+```
+
+---
+
+# Missing Order ID
+
+Request:
+
+```text
 Where is my order?
-
 ```
 
-
-
-These tests verified:
-
-
-
-\* Intent classification
-
-\* Fallback routing
-
-\* Identifier extraction
-
-\* Tool execution
-
-\* Transactional data retrieval
-
-\* Return eligibility
-
-\* Deterministic response generation
-
-\* Structured API responses
-
-\* Dockerized backend operation
-
-\* Streamlit-to-backend communication
-
-
-
-\---
-
-
-
-\# 🏭 Production Engineering
-
-
-
-ShopAssist AI incorporates several production-oriented design principles.
-
-
-
-\## Modular Architecture
-
-
-
-Responsibilities are separated into:
-
-
+Expected behavior:
 
 ```text
-
-Routing
-
-Agents
-
-LLM
-
-RAG
-
-Tools
-
-Services
-
-Frontend
-
+The assistant asks the customer to provide an order ID.
 ```
 
+This prevents the system from inventing transactional information.
 
+---
 
-This makes individual components easier to maintain and replace.
-
-
-
-\---
-
-
-
-\## Provider Abstraction
-
-
-
-Gemini interaction is encapsulated in:
-
-
-
-```text
-
-GeminiProvider
-
-```
-
-
-
-This makes it possible to introduce additional LLM providers in the future.
-
-
-
-Potential providers include:
-
-
-
-```text
-
-OpenAI
-
-Claude
-
-Azure OpenAI
-
-Local vLLM
-
-```
-
-
-
-without redesigning the entire application.
-
-
-
-\---
-
-
-
-\# ⚡ Latency and Throughput Considerations
-
-
-
-The architecture reduces unnecessary work through:
-
-
-
-\* Prompt/response caching
-
-\* Tool-based deterministic answers
-
-\* Top-K retrieval
-
-\* Lightweight routing fallback
-
-\* Optional local inference
-
-\* Containerized services
-
-
-
-Transactional requests can also bypass unnecessary generation when deterministic tool information is sufficient.
-
-
-
-\---
-
-
-
-\# 🔐 Security Considerations
-
-
-
-The application prompt explicitly prevents the assistant from requesting highly sensitive information.
-
-
-
-The assistant must not request:
-
-
-
-```text
-
-Passwords
-
-CVV codes
-
-Complete card numbers
-
-```
-
-
-
-API credentials are provided through environment variables rather than source code.
-
-
-
-\---
-
-
-
-\# 🧯 Graceful Degradation
-
-
-
-The system has multiple levels of fallback.
-
-
-
-```text
-
-&#x20;               Gemini
-
-&#x20;                 │
-
-&#x20;            unavailable
-
-&#x20;                 │
-
-&#x20;                 ▼
-
-&#x20;       Deterministic Router
-
-&#x20;                 │
-
-&#x20;                 ▼
-
-&#x20;       Transactional Tools
-
-&#x20;                 │
-
-&#x20;                 ▼
-
-&#x20;     Deterministic Generation
-
-```
-
-
-
-Therefore, a Gemini quota failure does not necessarily mean that the complete application becomes unusable.
-
-
-
-For example, during testing the Gemini API reached its free-tier request quota. The backend continued to respond using:
-
-
-
-```text
-
-routing\_method:
-
-deterministic\_fallback
-
-```
-
-
-
-and:
-
-
-
-```text
-
-generation\_method:
-
-deterministic\_fallback
-
-```
-
-
-
-This demonstrates graceful degradation under real API failure conditions.
-
-
-
-\---
-
-
-
-\# 📋 Assignment Requirements Coverage
-
-
-
-\## Task 1 — Build an AI Assistant
-
-
-
-| Requirement          | Implementation                        | Status |
-
-| -------------------- | ------------------------------------- | ------ |
-
-| Major LLM provider   | Gemini                                | ✅      |
-
-| Prompt engineering   | Routing and generation prompts        | ✅      |
-
-| Temperature          | Configured during generation          | ✅      |
-
-| top\_p                | Configured during generation          | ✅      |
-
-| Structured output    | JSON response schema                  | ✅      |
-
-| Tool calling         | Tool registry and transactional tools | ✅      |
-
-| RAG                  | Retrieval pipeline                    | ✅      |
-
-| Document ingestion   | RAG/document pipeline                 | ✅      |
-
-| Chunking             | RAG pipeline                          | ✅      |
-
-| Embeddings           | Vectorization pipeline                | ✅      |
-
-| Vector retrieval     | Top-K retrieval                       | ✅      |
-
-| Local LLM            | vLLM configuration                    | ✅      |
-
-| Open-source model    | Qwen/Qwen3-0.6B                       | ✅      |
-
-| Docker               | Dockerfile                            | ✅      |
-
-| Docker Compose       | docker-compose.yml                    | ✅      |
-
-| README               | This document                         | ✅      |
-
-| Architecture diagram | To be inserted                        | ⏳      |
-
-
-
-\---
-
-
-
-\# 📋 Task 2 — Productionize the AI Assistant
-
-
-
-| Requirement                 | Implementation                                      | Status         |
-
-| --------------------------- | --------------------------------------------------- | -------------- |
-
-| Web UI                      | Streamlit                                           | ✅              |
-
-| Backend API                 | FastAPI                                             | ✅              |
-
-| LLM integration             | Gemini provider                                     | ✅              |
-
-| Model optimization          | Not required for primary Gemini API                 | ⚠️             |
-
-| ONNX conversion             | Not applicable to Gemini API                        | ⚠️             |
-
-| Inference optimization      | Local vLLM option                                   | ✅              |
-
-| Concurrent request handling | FastAPI/Uvicorn architecture                        | ✅              |
-
-| Latency considerations      | Caching, retrieval limits, deterministic tools      | ✅              |
-
-| Prompt/response caching     | Implemented                                         | ✅              |
-
-| Retry/error handling        | Provider exception handling and fallback            | ✅              |
-
-| Rate-limit handling         | Gemini 429 graceful fallback                        | ✅              |
-
-| Fallback model/provider     | Deterministic fallback + optional vLLM architecture | ✅              |
-
-| Error handling              | Exception handling                                  | ✅              |
-
-| Graceful degradation        | Implemented                                         | ✅              |
-
-| Dockerization               | Dockerfile                                          | ✅              |
-
-| Docker Compose              | docker-compose.yml                                  | ✅              |
-
-| Deployment instructions     | README                                              | ✅              |
-
-| Architecture diagram        | To be inserted                                      | ⏳              |
-
-| Cloud deployment            | Not implemented                                     | Optional/Bonus |
-
-
-
-\---
-
-
-
-\# ⚠️ ONNX Requirement
-
-
-
-The assignment lists ONNX conversion as:
-
-
-
-```text
-
-optional where applicable
-
-```
-
-
-
-The primary model used by ShopAssist AI is accessed through the Gemini API.
-
-
-
-Because Gemini is a remotely hosted API model, its internal model weights are not available for conversion to ONNX within this project.
-
-
-
-Therefore, ONNX conversion is not applicable to the primary Gemini deployment.
-
-
-
-For the optional local model deployment, vLLM is used instead because it is specifically designed for efficient serving of transformer-based language models.
-
-
-
-\---
-
-
-
-\# ☁️ Cloud Deployment
-
-
-
-Cloud deployment to:
-
-
-
-```text
-
-Azure
-
-AWS
-
-GCP
-
-```
-
-
-
-was not required for the core implementation.
-
-
-
-It can be added as a future deployment stage.
-
-
-
-The Dockerized architecture makes the application suitable for deployment to cloud container platforms.
-
-
-
-\---
-
-
-
-\# 🔮 Future Improvements
-
-
-
-Potential future improvements include:
-
-
-
-\## 1. Persistent Vector Database
-
-
-
-Replace development-oriented retrieval storage with a production vector database such as:
-
-
-
-```text
-
-FAISS
-
-Chroma
-
-Qdrant
-
-Pinecone
-
-Weaviate
-
-```
-
-
-
-depending on deployment requirements.
-
-
-
-\---
-
-
-
-\## 2. Persistent Conversation Memory
-
-
-
-Add conversation-level memory so the assistant can understand follow-up questions such as:
-
-
-
-```text
-
-User:
-
-Where is my order ORD-1001?
-
-
-
-Assistant:
-
-Your order is shipped.
-
-
-
-User:
-
-When will it arrive?
-
-```
-
-
-
-\---
-
-
-
-\## 3. Authentication
-
-
-
-Add customer authentication so transactional tools can verify that the requesting customer owns the requested order.
-
-
-
-\---
-
-
-
-\## 4. Observability
-
-
-
-Introduce:
-
-
-
-\* Structured logging
-
-\* Metrics
-
-\* Tracing
-
-\* Request IDs
-
-\* Latency monitoring
-
-\* LLM token monitoring
-
-\* Error dashboards
-
-
-
-\---
-
-
-
-\## 5. Advanced Rate Limiting
-
-
-
-Implement API-level rate limiting to protect the backend from excessive traffic.
-
-
-
-\---
-
-
-
-\## 6. Production Database
-
-
-
-Replace mock JSON transactional data with a real database-backed order management system.
-
-
-
-\---
-
-
-
-\## 7. Automated Testing
-
-
-
-Add comprehensive:
-
-
-
-\* Unit tests
-
-\* Integration tests
-
-\* API tests
-
-\* RAG evaluation
-
-\* LLM evaluation
-
-\* Load testing
-
-\* Regression tests
-
-
-
-\---
-
-
-
-\# 🧠 Engineering Principles Demonstrated
-
-
-
-ShopAssist AI demonstrates several important AI engineering principles:
-
-
-
-\### Separation of Concerns
-
-
-
-Routing, retrieval, tools, agents, LLM providers, and UI are separated.
-
-
-
-\### Grounded Generation
-
-
-
-The assistant uses retrieved knowledge and transactional tools instead of relying exclusively on model memory.
-
-
-
-\### Deterministic Fallbacks
-
-
-
-Critical customer-support functionality remains available during LLM failures.
-
-
-
-\### Structured Interfaces
-
-
-
-Components communicate through predictable structured data.
-
-
-
-\### Provider Abstraction
-
-
-
-LLM functionality is isolated behind a provider interface.
-
-
-
-\### Containerized Deployment
-
-
-
-The application can be reproduced using Docker Compose.
-
-
-
-\### Production-Oriented Reliability
-
-
-
-The system explicitly handles:
-
-
-
-\* Rate limits
-
-\* Provider failures
-
-\* Invalid model responses
-
-\* Missing identifiers
-
-\* Missing knowledge
-
-\* Tool failures
-
-
-
-\---
-
-
-
-\# 📊 End-to-End Example
-
-
+# End-to-End Example
 
 Consider:
 
-
-
 ```text
-
 I want to return order ORD-1003.
-
 ```
 
-
-
-The system processes the request as follows:
-
-
+The system processes the request as:
 
 ```text
-
-1\. Streamlit receives the message
-
-&#x20;         ↓
-
-2\. FastAPI receives POST /chat
-
-&#x20;         ↓
-
-3\. ChatService starts processing
-
-&#x20;         ↓
-
-4\. IntentRouter classifies request
-
-&#x20;         ↓
-
-5\. Intent = returns
-
-&#x20;         ↓
-
-6\. Order ID ORD-1003 is extracted
-
-&#x20;         ↓
-
-7\. check\_return\_eligibility is executed
-
-&#x20;         ↓
-
-8\. Mock order database is queried
-
-&#x20;         ↓
-
-9\. Order is confirmed as delivered
-
-&#x20;         ↓
-
-10\. Return eligibility = true
-
-&#x20;         ↓
-
-11\. RAG context is retrieved
-
-&#x20;         ↓
-
-12\. Specialized returns-agent instructions are loaded
-
-&#x20;         ↓
-
-13\. Gemini attempts response generation
-
-&#x20;         ↓
-
-14\. If Gemini fails, deterministic fallback is used
-
-&#x20;         ↓
-
-15\. Structured JSON response is returned
-
-&#x20;         ↓
-
-16\. Streamlit displays the customer-facing answer
-
+1. Streamlit receives the message
+2. FastAPI receives POST /chat
+3. ChatService starts processing
+4. IntentRouter classifies the request
+5. Intent = returns
+6. ORD-1003 is extracted
+7. check_return_eligibility is executed
+8. Mock order data is queried
+9. ORD-1003 is found
+10. Order status = delivered
+11. Return eligibility = true
+12. RAG context is retrieved
+13. Returns-agent instructions are loaded
+14. Gemini attempts generation
+15. Structured response is produced
+16. Streamlit displays the answer
 ```
 
-
-
-Final customer-facing answer:
-
-
+Final answer:
 
 ```text
-
 Yes. This order is currently eligible for return under the available return policy.
-
 ```
 
+---
 
+# Order Status Flow
 
-\---
+```text
+Customer
+   |
+   v
+"What is the status of ORD-1002?"
+   |
+   v
+Intent Router
+   |
+   v
+order_support
+   |
+   v
+Extract ORD-1002
+   |
+   v
+get_order_status
+   |
+   v
+orders.json
+   |
+   v
+processing
+   |
+   v
+estimated delivery
+   |
+   v
+Customer response
+```
 
+---
 
+# Return Flow
 
-\# 🏁 Conclusion
+```text
+Customer
+   |
+   v
+"I want to return order ORD-1003."
+   |
+   v
+Intent Router
+   |
+   v
+returns
+   |
+   v
+Extract ORD-1003
+   |
+   v
+check_return_eligibility
+   |
+   v
+orders.json
+   |
+   v
+delivered
+   |
+   v
+eligible = true
+   |
+   v
+Customer response
+```
 
+---
 
+# Product Information Flow
 
-ShopAssist AI demonstrates the design and implementation of a modern AI-powered customer-support system.
+```text
+Customer
+   |
+   v
+Product question
+   |
+   v
+Intent Router
+   |
+   v
+product_information
+   |
+   v
+Extract PROD-ID
+   |
+   v
+get_product_info
+   |
+   v
+Mock product data
+   |
+   v
+Structured response
+```
 
+---
 
+# RAG Flow
+
+```text
+Customer question
+       |
+       v
+Retrieval
+       |
+       v
+Embedding similarity
+       |
+       v
+Top-K results
+       |
+       v
+Formatted context
+       |
+       v
+Grounded prompt
+       |
+       v
+LLM
+       |
+       v
+Response
+```
+
+---
+
+# Reliability Flow
+
+```text
+                 Gemini
+                   |
+            +------+------+
+            |             |
+         Success        Failure
+            |             |
+            |       Deterministic
+            |          fallback
+            |             |
+            +------+------+
+                   |
+                   v
+              JSON result
+```
+
+---
+
+# Testing
+
+The system was tested through direct API requests using PowerShell.
+
+Examples tested include:
+
+```text
+I want to return something I bought.
+```
+
+```text
+I want to return order ORD-1001.
+```
+
+```text
+I want to return order ORD-1003.
+```
+
+```text
+Where is my order ORD-1001?
+```
+
+```text
+What is the status of ORD-1002?
+```
+
+```text
+Where is my order?
+```
+
+The tests verified:
+
+* Intent routing
+* Order ID extraction
+* Tool execution
+* Return eligibility
+* Deterministic fallback
+* Structured response generation
+* Health endpoint
+* Docker deployment
+
+---
+
+# Gemini Rate-Limit Test
+
+The system was also tested while the Gemini API was rate-limited.
+
+Observed condition:
+
+```text
+HTTP 429
+Too Many Requests
+```
+
+The application did not terminate.
+
+Instead:
+
+```text
+Gemini unavailable
+        |
+        v
+Deterministic routing
+        |
+        v
+Deterministic generation
+        |
+        v
+HTTP 200
+```
+
+This demonstrates the implemented graceful-degradation behavior.
+
+---
+
+# Assignment Requirement Mapping
+
+## Task 1 - Build an AI Assistant
+
+| Requirement              | Implementation                  | Status   |
+| ------------------------ | ------------------------------- | -------- |
+| Major LLM provider       | Gemini API                      | Complete |
+| Prompt engineering       | System and routing prompts      | Complete |
+| Temperature tuning       | `temperature=0.2`               | Complete |
+| Top-p tuning             | `top_p=0.9`                     | Complete |
+| Structured output        | JSON response schema            | Complete |
+| Intent classification    | Hybrid router                   | Complete |
+| Tool calling             | Tool registry                   | Complete |
+| Transactional tools      | Order/product/return tools      | Complete |
+| RAG                      | Retrieval pipeline              | Complete |
+| Document ingestion       | Knowledge-base ingestion        | Complete |
+| Chunking                 | Retrieval preprocessing         | Complete |
+| Embeddings               | Embedding-based retrieval       | Complete |
+| Vectorized retrieval     | Semantic retrieval              | Complete |
+| Local model architecture | vLLM-compatible configuration   | Complete |
+| Docker                   | Dockerfile                      | Complete |
+| Source code              | Backend/frontend/source modules | Complete |
+| README                   | This document                   | Complete |
+| Architecture diagram     | `docs/architecture.png`         | Complete |
+
+---
+
+# Task 2 - Productionize the AI Assistant
+
+| Requirement                 | Implementation                                | Status         |
+| --------------------------- | --------------------------------------------- | -------------- |
+| Web UI                      | Streamlit                                     | Complete       |
+| Backend API                 | FastAPI                                       | Complete       |
+| UI-to-backend connection    | HTTP API                                      | Complete       |
+| Model optimization          | Not applicable to hosted Gemini weights       | N/A            |
+| ONNX conversion             | Not applicable to remote Gemini model         | N/A            |
+| Inference optimization      | Optional local vLLM architecture              | Complete       |
+| Concurrent request handling | FastAPI/Uvicorn                               | Complete       |
+| Latency optimization        | Caching, top-K retrieval, deterministic tools | Complete       |
+| Throughput considerations   | Caching and lightweight fallback              | Complete       |
+| Prompt/response caching     | Implemented                                   | Complete       |
+| Retry/error handling        | Provider exception handling                   | Complete       |
+| Rate-limit handling         | Gemini 429 fallback                           | Complete       |
+| Fallback provider/model     | Deterministic fallback + optional vLLM        | Complete       |
+| Error handling              | Exception handling                            | Complete       |
+| Graceful degradation        | Implemented                                   | Complete       |
+| Dockerization               | Dockerfile                                    | Complete       |
+| Docker Compose              | `docker-compose.yml`                          | Complete       |
+| Deployment instructions     | README                                        | Complete       |
+| Architecture diagram        | `docs/architecture.png`                       | Complete       |
+| Cloud deployment            | Not implemented                               | Optional/Bonus |
+
+---
+
+# Deliverables
+
+The project contains the required deliverables.
+
+## Source Code
+
+The source code is organized under:
+
+```text
+backend/
+frontend/
+data/
+scripts/
+```
+
+---
+
+## Dockerfile
+
+Located at:
+
+```text
+Dockerfile
+```
+
+---
+
+## Docker Compose
+
+Located at:
+
+```text
+docker-compose.yml
+```
+
+---
+
+## README
+
+Located at:
+
+```text
+README.md
+```
+
+---
+
+## Architecture Diagram
+
+Located at:
+
+```text
+docs/architecture.png
+```
+
+---
+
+# ONNX Consideration
+
+The assignment specifies ONNX conversion as optional where applicable.
+
+The primary model used by ShopAssist AI is accessed through the Gemini API.
+
+Gemini is remotely hosted, so its internal model weights are not available for local ONNX conversion within this project.
+
+Therefore:
+
+```text
+ONNX conversion
+       |
+       v
+Not applicable to primary Gemini deployment
+```
+
+For local model deployment, the architecture instead supports vLLM.
+
+---
+
+# Model Optimization
+
+Model optimization is not directly applicable to the primary hosted Gemini model because the project does not control or possess the underlying Gemini model weights.
+
+For the optional local deployment path, inference can be optimized through the serving infrastructure.
+
+The architecture therefore separates:
+
+```text
+Hosted Gemini
+```
+
+from:
+
+```text
+Optional local vLLM
+```
+
+---
+
+# Concurrent Request Handling
+
+FastAPI and Uvicorn provide an asynchronous web-server architecture suitable for handling multiple requests.
+
+The application is structured so that request processing is handled through the API service rather than through a blocking command-line workflow.
+
+Caching and deterministic tool paths further reduce unnecessary model calls.
+
+---
+
+# Latency Optimization
+
+Latency is reduced through:
+
+```text
+Caching
+   +
+Top-K retrieval
+   +
+Deterministic transactional tools
+   +
+Lightweight routing fallback
+   +
+Optional local inference
+```
+
+Transactional information can be obtained directly from tools rather than requiring unnecessary LLM generation.
+
+---
+
+# Throughput Optimization
+
+Throughput considerations include:
+
+* Caching repeated requests
+* Limiting retrieval to relevant results
+* Lightweight deterministic fallback logic
+* FastAPI/Uvicorn request handling
+* Optional vLLM-based local serving
+* Avoiding unnecessary generation for deterministic transactional operations
+
+---
+
+# Cloud Deployment
+
+Cloud deployment was not required for the core assignment.
+
+The application can potentially be deployed to:
+
+```text
+Azure
+AWS
+GCP
+```
+
+The Dockerized architecture provides a suitable foundation for future container-based cloud deployment.
+
+Cloud deployment is therefore considered:
+
+```text
+Optional / Bonus
+```
+
+---
+
+# Security Considerations
+
+The application follows basic security principles.
+
+The model is instructed not to request:
+
+```text
+Passwords
+CVV codes
+Complete card numbers
+```
+
+The system also avoids inventing transactional information.
+
+Transactional data is obtained from tools rather than generated from model memory.
+
+---
+
+# API Key Security
+
+API keys should never be committed to the repository.
+
+Use environment variables:
+
+```env
+GEMINI_API_KEY=your_api_key
+```
+
+Ensure:
+
+```text
+.env
+```
+
+is included in:
+
+```text
+.gitignore
+```
+
+---
+
+# Transactional Data Security
+
+The current order database is mock data for assignment purposes.
+
+A production implementation should replace the JSON data source with a secure database and enforce customer authorization before returning order-specific information.
+
+---
+
+# Current Limitations
+
+The current implementation intentionally uses mock transactional data.
+
+It does not yet include:
+
+* Real customer authentication
+* Production order database
+* Persistent conversation memory
+* Full production observability
+* Cloud deployment
+* Production-grade API rate limiting
+* Comprehensive automated evaluation
+
+These are outside the required core implementation or are identified as future improvements.
+
+---
+
+# Future Improvements
+
+## 1. Persistent Vector Database
+
+A production deployment could use a dedicated vector database such as:
+
+```text
+FAISS
+Chroma
+Qdrant
+Pinecone
+Weaviate
+```
+
+---
+
+## 2. Conversation Memory
+
+Conversation-level memory could support follow-up interactions.
+
+Example:
+
+```text
+User:
+Where is my order ORD-1001?
+
+Assistant:
+Your order is shipped.
+
+User:
+When will it arrive?
+```
+
+The second question could be resolved using conversation context.
+
+---
+
+## 3. Authentication
+
+Customer authentication could be introduced so that transactional tools verify ownership of requested orders.
+
+---
+
+## 4. Production Database
+
+The mock JSON database could be replaced with a real database-backed order management system.
+
+---
+
+## 5. Observability
+
+Future production monitoring could include:
+
+```text
+Structured logs
+Metrics
+Tracing
+Request IDs
+Latency monitoring
+Token monitoring
+Error dashboards
+```
+
+---
+
+## 6. Advanced Rate Limiting
+
+An API-level rate limiter could be added to protect the backend from excessive traffic.
+
+---
+
+## 7. Automated Testing
+
+A larger production test suite could include:
+
+```text
+Unit tests
+Integration tests
+API tests
+RAG evaluation
+LLM evaluation
+Load testing
+Regression tests
+```
+
+---
+
+## 8. Additional LLM Providers
+
+The provider abstraction could be extended to support:
+
+```text
+OpenAI
+Claude
+Azure OpenAI
+Other OpenAI-compatible APIs
+Local vLLM
+```
+
+---
+
+# Engineering Principles Demonstrated
+
+## Separation of Concerns
+
+The application separates:
+
+```text
+Routing
+Agents
+LLM
+RAG
+Tools
+Services
+Frontend
+```
+
+---
+
+## Grounded Generation
+
+The system combines:
+
+```text
+Retrieved knowledge
++
+Transactional tool results
++
+LLM generation
+```
+
+This reduces dependence on unsupported model assumptions.
+
+---
+
+## Deterministic Fallbacks
+
+Critical support functionality remains available when the primary LLM provider fails.
+
+---
+
+## Structured Interfaces
+
+Components communicate through structured dictionaries and JSON responses.
+
+---
+
+## Provider Abstraction
+
+Gemini-specific functionality is isolated in the provider layer.
+
+---
+
+## Containerized Deployment
+
+Docker and Docker Compose provide reproducible deployment.
+
+---
+
+## Production-Oriented Reliability
+
+The application explicitly handles:
+
+```text
+Provider failures
+Rate limits
+Malformed output
+Missing identifiers
+Tool failures
+Missing knowledge
+Invalid confidence values
+```
+
+---
+
+# Complete End-to-End Architecture
+
+```text
++---------------------------------------------------------------+
+|                         SHOPASSIST AI                         |
++---------------------------------------------------------------+
+                              |
+                              v
++---------------------------------------------------------------+
+|                        STREAMLIT UI                           |
+|                                                               |
+|  Customer message                                             |
+|  Response display                                             |
++------------------------------+--------------------------------+
+                               |
+                               | HTTP
+                               v
++---------------------------------------------------------------+
+|                         FASTAPI BACKEND                       |
+|                                                               |
+|                       POST /chat                              |
+|                       GET /health                             |
++------------------------------+--------------------------------+
+                               |
+                               v
++---------------------------------------------------------------+
+|                         CHAT SERVICE                          |
+|                                                               |
+|  Request validation                                           |
+|  Orchestration                                                |
+|  Routing                                                      |
+|  Tools                                                        |
+|  RAG                                                          |
+|  Generation                                                   |
+|  Fallback                                                     |
+|  Response normalization                                       |
++------------------------------+--------------------------------+
+                               |
+                               v
++---------------------------------------------------------------+
+|                       HYBRID ROUTER                           |
+|                                                               |
+|             +---------------------------+                     |
+|             |                           |                     |
+|             v                           v                     |
+|        Gemini Router             Deterministic Router         |
+|             |                           |                     |
+|             +-------------+-------------+                     |
+|                           |                                   |
+|                           v                                   |
+|                         Intent                                |
++------------------------------+--------------------------------+
+                               |
+                               v
++---------------------------------------------------------------+
+|                     SPECIALIZED AGENTS                        |
+|                                                               |
+| Order | Shipping | Returns | Refunds | Payments               |
+| Account | Product | Cancellation | General                    |
++------------------------------+--------------------------------+
+                               |
+                +--------------+--------------+
+                |                             |
+                v                             v
++-----------------------------+   +-----------------------------+
+|            RAG              |   |            TOOLS             |
+|                             |   |                             |
+| Knowledge Base              |   | get_order_status            |
+| Chunking                    |   | get_product_info            |
+| Embeddings                  |   | check_return_eligibility   |
+| Semantic Retrieval          |   |                             |
+| Top-K Context               |   | Mock Transactional Data    |
++--------------+--------------+   +--------------+--------------+
+               |                                 |
+               +----------------+----------------+
+                                |
+                                v
++---------------------------------------------------------------+
+|                     GROUNDED PROMPT                           |
+|                                                               |
+| Customer Message                                              |
+| Detected Intent                                               |
+| Agent Instructions                                            |
+| Retrieved Context                                             |
+| Tool Result                                                   |
++------------------------------+--------------------------------+
+                               |
+                               v
++---------------------------------------------------------------+
+|                       LLM PROVIDER                            |
+|                                                               |
+|                       Gemini API                              |
+|                                                               |
+|                 Optional Local vLLM                           |
++------------------------------+--------------------------------+
+                               |
+                  +------------+------------+
+                  |                         |
+                  v                         v
+             Successful                 Failure
+                  |                         |
+                  |                  Deterministic
+                  |                     fallback
+                  |                         |
+                  +------------+------------+
+                               |
+                               v
++---------------------------------------------------------------+
+|                    STRUCTURED RESPONSE                         |
+|                                                               |
+| intent                                                        |
+| answer                                                        |
+| confidence                                                    |
+| sources                                                       |
+| tool_used                                                     |
+| routing_method                                                |
+| generation_method                                             |
++------------------------------+--------------------------------+
+                               |
+                               v
+                         STREAMLIT UI
+```
+
+---
+
+# Production Reliability Architecture
+
+```text
+                    Customer Request
+                           |
+                           v
+                    FastAPI Backend
+                           |
+                           v
+                     ChatService
+                           |
+                           v
+                     Intent Router
+                           |
+              +------------+------------+
+              |                         |
+              v                         v
+           Gemini                 Deterministic
+           available?              fallback
+              |                         |
+              +------------+------------+
+                           |
+                           v
+                         Intent
+                           |
+                           v
+                    Specialized Agent
+                           |
+                 +---------+---------+
+                 |                   |
+                 v                   v
+                RAG                Tools
+                 |                   |
+                 +---------+---------+
+                           |
+                           v
+                    Grounded Prompt
+                           |
+                           v
+                     Gemini Generate
+                           |
+                 +---------+---------+
+                 |                   |
+              Success              Failure
+                 |                   |
+                 |             Deterministic
+                 |                answer
+                 |                   |
+                 +---------+---------+
+                           |
+                           v
+                     JSON Response
+                           |
+                           v
+                       Frontend
+```
+
+---
+
+# Docker Deployment Architecture
+
+```text
+                    Docker Compose
+                           |
+             +-------------+-------------+
+             |                           |
+             v                           v
++-------------------------+   +-------------------------+
+|   shopassist-backend    |   |   shopassist-frontend   |
+|                         |   |                         |
+| FastAPI                 |   | Streamlit               |
+| ChatService             |   | Web UI                  |
+| Intent Router           |   |                         |
+| Agents                  |   |                         |
+| RAG                     |   |                         |
+| Tools                   |   |                         |
+| Gemini Provider         |   |                         |
++-----------+-------------+   +------------+------------+
+            |                              |
+            | 8000                         | 8501
+            |                              |
+            v                              v
+       Host :8002                    Host :8501
+```
+
+---
+
+# RAG Architecture
+
+```text
+              Knowledge Documents
+                       |
+                       v
+              Document Ingestion
+                       |
+                       v
+                  Chunking
+                       |
+                       v
+                 Embeddings
+                       |
+                       v
+             Vectorized Knowledge
+                       |
+                       v
+              Semantic Retrieval
+                       |
+                       v
+                  Top-K = 3
+                       |
+                       v
+               Retrieved Context
+                       |
+                       v
+                Grounded Prompt
+                       |
+                       v
+                       LLM
+```
+
+---
+
+# Tool Architecture
+
+```text
+Customer Request
+       |
+       v
+Intent Router
+       |
+       v
+Detected Intent
+       |
+       +--------------------------+
+       |                          |
+       v                          v
+order_support             product_information
+       |                          |
+       v                          v
+Order ID                   Product ID
+       |                          |
+       v                          v
+get_order_status           get_product_info
+       |                          |
+       +------------+-------------+
+                    |
+                    v
+              Tool Result
+                    |
+                    v
+              ChatService
+                    |
+                    v
+             Final Response
+```
+
+---
+
+# Why the Architecture Is Production-Oriented
+
+The project does not rely on a single successful LLM request.
+
+Instead, it provides multiple layers of resilience:
+
+```text
+LLM
+ |
+ +-- Structured parsing
+ |
+ +-- Intent validation
+ |
+ +-- Deterministic routing fallback
+ |
+ +-- Tool execution
+ |
+ +-- RAG grounding
+ |
+ +-- Generation fallback
+ |
+ +-- Response normalization
+ |
+ +-- Dockerized deployment
+```
+
+This architecture makes the application more resilient to external model failures and invalid model responses.
+
+---
+
+# Conclusion
+
+ShopAssist AI demonstrates the implementation of a modern AI-powered customer-support system using both Applied AI and Engineering AI Systems principles.
 
 The project combines:
 
-
-
 ```text
-
-LLM
-
-\+
-
+LLM Integration
+        +
 Prompt Engineering
-
-\+
-
-Intent Routing
-
-\+
-
+        +
+Structured JSON
+        +
+Hybrid Intent Routing
+        +
 Specialized Agents
-
-\+
-
+        +
 Tool Calling
-
-\+
-
+        +
+Mock Transactional Data
+        +
 RAG
-
-\+
-
+        +
 Embeddings
-
-\+
-
-Local LLM Serving
-
-\+
-
+        +
+Semantic Retrieval
+        +
 Caching
-
-\+
-
-Fallbacks
-
-\+
-
+        +
+Deterministic Fallbacks
+        +
+Rate-Limit Handling
+        +
+Error Handling
+        +
 FastAPI
-
-\+
-
+        +
 Streamlit
-
-\+
-
+        +
 Docker
-
-\+
-
+        +
 Docker Compose
-
+        +
+Optional Local vLLM
 ```
 
-
-
-The resulting architecture is modular, testable, containerized, and designed with production reliability in mind.
-
-
-
-The system was also tested under an actual Gemini API rate-limit condition. Rather than crashing, the application successfully degraded to deterministic routing and deterministic generation, demonstrating the reliability principles required for production AI systems.
-
-
-
-The final architecture diagram should be added to:
-
-
+The application supports customer-support intents including:
 
 ```text
-
-docs/architecture.png
-
+Order Support
+Shipping
+Returns
+Refunds
+Cancellations
+Payments
+Account Support
+Product Information
+General Support
 ```
 
+Transactional requests can use tools backed by mock order and product data.
+
+Knowledge-based questions can use the RAG pipeline.
+
+LLM-based classification and generation provide flexible natural-language interaction.
+
+Deterministic fallbacks provide continued functionality when Gemini is unavailable.
+
+The application was successfully containerized using Docker Compose and tested through its FastAPI endpoints.
+
+An actual Gemini API rate-limit condition was also tested. Instead of terminating the application, the system logged the provider failure and successfully switched to deterministic routing and deterministic response generation.
+
+The final architecture diagram is available at:
+
+```text
+docs/architecture.png
+```
+
+---
+
+# Assignment Completion Summary
+
+```text
+Task 1
+------
+LLM Integration                 [DONE]
+Prompt Engineering              [DONE]
+Structured Output               [DONE]
+Tool Calling                    [DONE]
+RAG                             [DONE]
+Document Ingestion              [DONE]
+Chunking                        [DONE]
+Embeddings                      [DONE]
+Vector Retrieval                [DONE]
+Local LLM / vLLM Architecture   [DONE]
+Docker                          [DONE]
+Source Code                     [DONE]
+Dockerfile                      [DONE]
+README                          [DONE]
+Architecture Diagram            [DONE]
 
 
-and referenced from the Architecture section above.
+Task 2
+------
+Web UI                          [DONE]
+FastAPI Backend                 [DONE]
+Caching                         [DONE]
+Concurrent API Architecture    [DONE]
+Latency Optimization            [DONE]
+Error Handling                  [DONE]
+Rate-Limit Handling             [DONE]
+Fallback                        [DONE]
+Graceful Degradation            [DONE]
+Dockerization                   [DONE]
+Docker Compose                  [DONE]
+Deployment Instructions         [DONE]
+Architecture Diagram            [DONE]
+Cloud Deployment                [OPTIONAL]
+```
 
+---
 
+# Created By
 
-\---
-
-
-
-\# 👤 Created By
-
-
-
-\*\*Rameshwor Poudel\*\*
-
-
-
+**Rameshwor Poudel**
