@@ -1,0 +1,47 @@
+{
+  "ORD-1001": {
+    "order_id": "ORD-1001",
+    "customer_id": "CUS-001",
+    "status": "shipped",
+    "carrier": "DHL",
+    "tracking_number": "DHL123456789",
+    "estimated_delivery": "2026-09-04",
+    "items": [
+      {
+        "product_id": "PROD-001",
+        "name": "Wireless Headphones",
+        "quantity": 1
+      }
+    ]
+  },
+  "ORD-1002": {
+    "order_id": "ORD-1002",
+    "customer_id": "CUS-002",
+    "status": "processing",
+    "carrier": null,
+    "tracking_number": null,
+    "estimated_delivery": "2026-09-06",
+    "items": [
+      {
+        "product_id": "PROD-002",
+        "name": "Mechanical Keyboard",
+        "quantity": 1
+      }
+    ]
+  },
+  "ORD-1003": {
+    "order_id": "ORD-1003",
+    "customer_id": "CUS-003",
+    "status": "delivered",
+    "carrier": "FedEx",
+    "tracking_number": "FDX987654321",
+    "estimated_delivery": "2026-08-28",
+    "items": [
+      {
+        "product_id": "PROD-003",
+        "name": "USB-C Hub",
+        "quantity": 2
+      }
+    ]
+  }
+}

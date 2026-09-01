@@ -1,0 +1,26 @@
+{
+  "PROD-001": {
+    "product_id": "PROD-001",
+    "name": "Wireless Headphones",
+    "category": "Audio",
+    "price": 79.99,
+    "stock": 25,
+    "description": "Bluetooth wireless headphones with active noise cancellation."
+  },
+  "PROD-002": {
+    "product_id": "PROD-002",
+    "name": "Mechanical Keyboard",
+    "category": "Computer Accessories",
+    "price": 99.99,
+    "stock": 12,
+    "description": "Mechanical keyboard with RGB lighting and programmable keys."
+  },
+  "PROD-003": {
+    "product_id": "PROD-003",
+    "name": "USB-C Hub",
+    "category": "Computer Accessories",
+    "price": 39.99,
+    "stock": 48,
+    "description": "7-in-1 USB-C hub with HDMI, USB-A, SD card and power delivery."
+  }
+}

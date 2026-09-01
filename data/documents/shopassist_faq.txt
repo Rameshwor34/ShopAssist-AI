@@ -1,0 +1,84 @@
+﻿SHOPASSIST AI - CUSTOMER SUPPORT KNOWLEDGE BASE
+
+ABOUT SHOPASSIST
+
+ShopAssist is an AI-powered e-commerce customer support platform. Customers can ask questions about orders, shipping, returns, refunds, payments, account access, and products.
+
+ORDER SUPPORT
+
+Customers can check their order status using their order number from the Orders section of their account.
+
+Order statuses include:
+- Processing: the order has been received and is being prepared.
+- Shipped: the package has left the fulfillment center.
+- Out for delivery: the package is with the delivery carrier.
+- Delivered: the carrier has marked the package as delivered.
+- Cancelled: the order was cancelled before completion.
+
+If an order remains in processing for an unusually long time, customers should contact customer support with their order number.
+
+SHIPPING
+
+Standard shipping normally takes 3-5 business days after an order has been dispatched.
+
+Express shipping normally takes 1-2 business days after dispatch.
+
+Shipping estimates may be affected by weekends, public holidays, weather, carrier delays, or incorrect delivery information.
+
+Customers can track shipped orders using the tracking number provided in their shipping confirmation.
+
+If tracking information has not updated for more than 48 hours, customers should contact support.
+
+RETURNS
+
+Customers may request a return within 30 days of delivery for eligible products.
+
+Products should normally be unused and returned in their original condition and packaging.
+
+Some products may be excluded from the standard return policy, including personalized products, certain hygiene-sensitive products, and final-sale items.
+
+Customers should initiate a return through the Returns section of their account.
+
+REFUNDS
+
+After an approved return is received and inspected, the refund is normally processed within 5-7 business days.
+
+The time for the refund to appear in a customer's bank account or card account can depend on the payment provider.
+
+If a refund has been marked as completed but has not appeared after the expected processing period, the customer should contact support.
+
+CANCELLATIONS
+
+Customers can request cancellation while an order is still in the processing stage.
+
+Once an order has been shipped, cancellation may no longer be possible. In that situation, the customer may need to use the normal return process after delivery.
+
+PAYMENTS
+
+ShopAssist supports major debit and credit cards and other payment methods displayed during checkout.
+
+If a payment fails, customers should verify their billing information and available funds, then retry the payment.
+
+Customers should never send complete card numbers, passwords, CVV codes, or other sensitive payment credentials through customer support chat.
+
+ACCOUNT SUPPORT
+
+Customers can reset a forgotten password through the password reset option on the login page.
+
+If an account appears compromised, the customer should immediately change the password and contact customer support.
+
+PRODUCT INFORMATION
+
+Product availability depends on current inventory.
+
+If a product is out of stock, customers can check the product page later for updated availability.
+
+Product specifications, dimensions, compatibility, and included accessories should be verified from the product listing before purchase.
+
+CUSTOMER SUPPORT
+
+For order-specific problems, customers should provide their order number but should not provide passwords, complete payment card numbers, or security codes.
+
+ShopAssist AI should answer general questions using the knowledge base and should avoid inventing policies that are not supported by the retrieved documents.
+
+If the knowledge base does not contain enough information to answer a question confidently, the assistant should clearly state that additional information or human support may be required.
