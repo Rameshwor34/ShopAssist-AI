@@ -1,4 +1,4 @@
-﻿import json
+import json
 import re
 from typing import Dict
 
@@ -232,6 +232,14 @@ class IntentRouter:
                 "send this back",
                 "send it back",
                 "return policy",
+                "want to return",
+                "need to return",
+                "i want to return",
+                "i need to return",
+                "return something",
+                "return something i bought",
+                "return an order",
+                "return my order",
             ]
         ):
             return "returns", 0.95
@@ -315,6 +323,10 @@ class IntentRouter:
                 "where is my order",
                 "where's my order",
                 "order status",
+                "status of",
+                "status for",
+                "what is the status",
+                "what's the status",
                 "track my order",
                 "track order",
                 "my order",

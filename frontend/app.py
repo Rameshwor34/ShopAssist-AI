@@ -1,7 +1,13 @@
-﻿import requests
+﻿import os
+import requests
 import streamlit as st
 
-API_URL = "http://127.0.0.1:8000"
+
+API_URL = os.getenv(
+    "API_BASE_URL",
+    "http://127.0.0.1:8002"
+)
+
 
 st.set_page_config(
     page_title="ShopAssist AI",
@@ -9,150 +15,67 @@ st.set_page_config(
     layout="centered",
 )
 
+
 st.title("🛍️ ShopAssist AI")
-st.caption("AI-powered e-commerce customer support assistant")
+st.caption("AI-powered e-commerce customer support")
+
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-prompt = st.chat_input(
-    "Ask about orders, shipping, returns, refunds, payments, or products..."
+
+user_message = st.chat_input(
+    "How can I help you today?"
 )
 
-if prompt:
+
+if user_message:
+
     st.session_state.messages.append(
-        {"role": "user", "content": prompt}
+        {
+            "role": "user",
+            "content": user_message,
+        }
     )
 
     with st.chat_message("user"):
-        st.markdown(prompt)
+        st.markdown(user_message)
 
     try:
         response = requests.post(
             f"{API_URL}/chat",
-            json={"message": prompt},
-            timeout=90,
+            json={"message": user_message},
+            timeout=60,
         )
 
-        if response.status_code == 429:
-            data = response.json()
+        response.raise_for_status()
 
-            with st.chat_message("assistant"):
-                st.warning(
-                    "The AI provider is temporarily rate-limited. "
-                    "Please retry after the quota resets."
-                )
+        data = response.json()
 
-                with st.expander("Service status"):
-                    st.json(data)
-
-            st.session_state.messages.append(
-                {
-                    "role": "assistant",
-                    "content": (
-                        "The AI provider is temporarily rate-limited. "
-                        "Please retry after the quota resets."
-                    ),
-                }
-            )
-
-        elif response.status_code >= 500:
-            data = response.json()
-
-            with st.chat_message("assistant"):
-                st.error(
-                    "The AI service is temporarily unavailable. "
-                    "Please try again later."
-                )
-
-                with st.expander("Service status"):
-                    st.json(data)
-
-            st.session_state.messages.append(
-                {
-                    "role": "assistant",
-                    "content": (
-                        "The AI service is temporarily unavailable. "
-                        "Please try again later."
-                    ),
-                }
-            )
-
-        else:
-            response.raise_for_status()
-            data = response.json()
-
-            answer = data.get(
-                "answer",
-                "No answer returned."
-            )
-
-            with st.chat_message("assistant"):
-                st.markdown(answer)
-
-                with st.expander("Routing details"):
-                    st.write(
-                        "**Intent:**",
-                        data.get("intent")
-                    )
-                    st.write(
-                        "**Confidence:**",
-                        data.get("confidence")
-                    )
-                    st.write(
-                        "**Sources:**",
-                        data.get("sources", [])
-                    )
-                    st.write(
-                        "**Tool used:**",
-                        data.get("tool_used", "none")
-                    )
-
-            st.session_state.messages.append(
-                {
-                    "role": "assistant",
-                    "content": answer
-                }
-            )
-
-    except requests.exceptions.ConnectionError:
-        error_message = (
-            "The ShopAssist backend is not running. "
-            "Please start the FastAPI server."
+        answer = data.get(
+            "answer",
+            "Sorry, I could not generate a response."
         )
 
         with st.chat_message("assistant"):
-            st.error(error_message)
+            st.markdown(answer)
 
         st.session_state.messages.append(
             {
                 "role": "assistant",
-                "content": error_message
-            }
-        )
-
-    except requests.exceptions.Timeout:
-        error_message = (
-            "The request timed out. Please try again."
-        )
-
-        with st.chat_message("assistant"):
-            st.error(error_message)
-
-        st.session_state.messages.append(
-            {
-                "role": "assistant",
-                "content": error_message
+                "content": answer,
             }
         )
 
     except requests.exceptions.RequestException as exc:
+
         error_message = (
-            "An unexpected backend error occurred."
+            f"Unable to connect to the ShopAssist backend: {exc}"
         )
 
         with st.chat_message("assistant"):
@@ -161,8 +84,6 @@ if prompt:
         st.session_state.messages.append(
             {
                 "role": "assistant",
-                "content": error_message
+                "content": error_message,
             }
         )
-
-        print(f"Backend request failed: {exc}")

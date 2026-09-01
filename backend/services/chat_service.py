@@ -94,78 +94,139 @@ class ChatService:
         tool_result: Optional[dict],
     ) -> str:
 
-        if not tool_result:
-            return (
-                "I’m currently unable to generate an AI response. "
-                "Please try again shortly."
-            )
+        # -------------------------------------------------
+        # Tool-based answers
+        # -------------------------------------------------
 
-        if not tool_result.get("success"):
-            return tool_result.get(
-                "error",
-                "The requested information could not be found.",
-            )
+        if tool_result:
 
-        if tool_used == "get_order_status":
-            order = tool_result["order"]
-
-            answer = (
-                f"Your order {order['order_id']} is currently "
-                f"{order['status']}. "
-            )
-
-            if order.get("carrier"):
-                answer += (
-                    f"The carrier is {order['carrier']}. "
+            if not tool_result.get("success"):
+                return tool_result.get(
+                    "error",
+                    "The requested information could not be found.",
                 )
 
-            if order.get("tracking_number"):
-                answer += (
-                    f"Your tracking number is "
-                    f"{order['tracking_number']}. "
+            if tool_used == "get_order_status":
+                order = tool_result["order"]
+
+                answer = (
+                    f"Your order {order['order_id']} is currently "
+                    f"{order['status']}. "
                 )
 
-            if order.get("estimated_delivery"):
-                answer += (
-                    f"The estimated delivery date is "
-                    f"{order['estimated_delivery']}."
+                if order.get("carrier"):
+                    answer += (
+                        f"The carrier is {order['carrier']}. "
+                    )
+
+                if order.get("tracking_number"):
+                    answer += (
+                        f"Your tracking number is "
+                        f"{order['tracking_number']}. "
+                    )
+
+                if order.get("estimated_delivery"):
+                    answer += (
+                        f"The estimated delivery date is "
+                        f"{order['estimated_delivery']}."
+                    )
+
+                return answer.strip()
+
+            if tool_used == "get_product_info":
+                product = tool_result["product"]
+
+                stock = product.get("stock", 0)
+
+                availability = (
+                    f"{stock} units are currently in stock."
+                    if stock > 0
+                    else "The product is currently out of stock."
                 )
 
-            return answer
-
-        if tool_used == "get_product_info":
-            product = tool_result["product"]
-
-            stock = product.get("stock", 0)
-
-            availability = (
-                f"{stock} units are currently in stock."
-                if stock > 0
-                else "The product is currently out of stock."
-            )
-
-            return (
-                f"{product['name']} costs "
-                f"${product['price']:.2f}. "
-                f"{availability} "
-                f"{product.get('description', '')}"
-            ).strip()
-
-        if tool_used == "check_return_eligibility":
-            if tool_result.get("eligible"):
                 return (
-                    "Yes. This order is currently eligible "
-                    "for return under the available return policy."
-                )
+                    f"{product['name']} costs "
+                    f"${product['price']:.2f}. "
+                    f"{availability} "
+                    f"{product.get('description', '')}"
+                ).strip()
 
-            return (
-                "This order is not currently eligible for return. "
-                f"{tool_result.get('reason', '')}"
-            ).strip()
+            if tool_used == "check_return_eligibility":
+                if tool_result.get("eligible"):
+                    return (
+                        "Yes. This order is currently eligible "
+                        "for return under the available return policy."
+                    )
 
-        return (
-            "I’m currently unable to generate an AI response. "
-            "Please try again shortly."
+                return (
+                    "This order is not currently eligible for return. "
+                    f"{tool_result.get('reason', '')}"
+                ).strip()
+
+        # -------------------------------------------------
+        # Useful deterministic fallback answers
+        # -------------------------------------------------
+
+        fallback_answers = {
+            "order_support": (
+                "I can help you check your order status. "
+                "Please provide your order ID, for example ORD-1001."
+            ),
+
+            "shipping": (
+                "I can help with shipping and delivery information. "
+                "Please tell me what you would like to know, such as "
+                "delivery time, shipping options, or tracking."
+            ),
+
+            "returns": (
+                "I can help you with a return. "
+                "Please provide your order ID so I can check whether "
+                "the order is eligible for return."
+            ),
+
+            "refunds": (
+                "I can help you with a refund. "
+                "Please provide your order ID or tell me whether you "
+                "are asking about refund eligibility or an existing refund."
+            ),
+
+            "cancellations": (
+                "I can help you with an order cancellation. "
+                "Please provide your order ID so I can check the order "
+                "and determine the next steps."
+            ),
+
+            "payments": (
+                "I can help with payment issues. "
+                "Please describe the payment problem, such as a declined "
+                "card, failed payment, or billing issue. "
+                "Never share your full card number or CVV."
+            ),
+
+            "account_support": (
+                "I can help with account access and login problems. "
+                "Please describe the issue you are experiencing. "
+                "Never share your password or verification codes."
+            ),
+
+            "product_information": (
+                "I can help you find product information such as "
+                "availability, specifications, compatibility, dimensions, "
+                "and included accessories. Please provide the product ID "
+                "if you have one."
+            ),
+
+            "general_support": (
+                "I can help with orders, shipping, returns, refunds, "
+                "payments, accounts, and product information. "
+                "What would you like help with?"
+            ),
+        }
+
+        return fallback_answers.get(
+            intent,
+            fallback_answers["general_support"],
         )
 
     def process(self, message: str) -> Dict[str, Any]:
@@ -355,7 +416,11 @@ Return valid JSON with exactly these fields:
 
         response.setdefault(
             "answer",
-            "I could not generate a reliable answer.",
+            self._deterministic_answer(
+                intent=intent,
+                tool_used=tool_used,
+                tool_result=tool_result,
+            ),
         )
 
         return response
